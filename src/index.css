@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Syne:wght@700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Syne", "Plus Jakarta Sans", sans-serif;
+  --font-mono: "Space Grotesk", monospace;
+  
+  --color-brand-red: #FF3B2F;
+  --color-brand-red-dark: #E02D21;
+  --color-brand-orange: #FF3B2F;
+  --color-brand-black: #0B0B0B;
+  --color-brand-dark: #121212;
+  --color-brand-cream: #F5F4EF;
+  --color-brand-cream-light: #FFFBF5;
+  --color-brand-neon: #FF3B2F;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-black text-white selection:bg-brand-red selection:text-white overflow-x-hidden;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+  
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-hover {
+    @apply hover:bg-white/10 hover:border-brand-red/50 transition-all duration-300;
+  }
+  
+  .neon-glow {
+    box-shadow: 0 0 25px rgba(255, 59, 47, 0.3);
+  }
+  
+  .neon-border {
+    @apply border border-brand-red/40 hover:border-brand-red transition-colors duration-300;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70;
+  }
+
+  .red-gradient {
+    @apply bg-gradient-to-br from-[#FF3B2F] to-[#E02D21];
+  }
+
+  .cream-bg {
+    background-color: #F5F4EF;
+  }
+
+  .editorial-shadow {
+    box-shadow: 6px 6px 0px #0B0B0B;
+  }
+
+  .editorial-shadow-red {
+    box-shadow: 6px 6px 0px #FF3B2F;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0B0B;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF3B2F;
+}
+
