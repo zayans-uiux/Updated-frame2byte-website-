@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -8,29 +8,30 @@ import {
   RotateCcw,
   AlertCircle,
   Zap,
-  Film,
   ExternalLink,
   Target,
   Clock,
   ArrowRight,
   ArrowUpRight,
   ShieldCheck,
-  Eye,
 } from 'lucide-react';
-import {
-  StructuredDiagnosticReport,
-} from '../types/instagramAudit';
+import { StructuredDiagnosticReport } from '../types/instagramAudit';
 import {
   parseInstagramInput,
-  generateStructuredDiagnostic,
+  verifyAccountConsistency,
 } from '../utils/instagramDiagnosticEngine';
+import {
+  trackFrameAiOpened,
+  trackFrameAiStarted,
+  trackFrameAiCompleted,
+  trackFrameAiFailed,
+} from '../utils/analytics';
 
 const loadingSteps = [
-  '✓ Verifying Exact Instagram Account',
-  '✓ Analyzing Customer-Facing Bio & Profile Identity',
-  '✓ Checking Visual Brand Presentation & Highlights',
-  '✓ Diagnosing Reel Hooks, Retention & View Metrics',
-  '✓ Evaluating Content Strategy & Carousels',
+  '✓ Verifying Exact Account Identity',
+  '✓ Checking Verified Profile & External Gate',
+  '✓ Auditing Content Positioning & Social Proof',
+  '✓ Evaluating Visual Hierarchy & Brand Presentation',
   '✓ Calculating Proprietary Weighted Frame Score',
 ];
 
@@ -44,60 +45,117 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [diagnosticReport, setDiagnosticReport] = useState<StructuredDiagnosticReport | null>(null);
   const navigate = useNavigate();
+
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const hasTrackedOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (hasTrackedOpenRef.current) return;
+
+    if (isPage) {
+      hasTrackedOpenRef.current = true;
+      trackFrameAiOpened();
+      return;
+    }
+
+    if (typeof IntersectionObserver !== 'undefined' && sectionRef.current) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting && !hasTrackedOpenRef.current) {
+            hasTrackedOpenRef.current = true;
+            trackFrameAiOpened();
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.15 }
+      );
+      observer.observe(sectionRef.current);
+      return () => observer.disconnect();
+    }
+  }, [isPage]);
 
   const handleAnalyzeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!handleInput.trim()) return;
 
+    // Reset all previous audit state to ensure zero cross-account contamination
+    setErrorMessage(null);
+    setDiagnosticReport(null);
     setIsAnalyzing(true);
     setProgressPercent(0);
     setActiveStepIndex(0);
 
-    // Call server API for live Instagram extraction & Gemini business awareness
-    let fetchedReport: StructuredDiagnosticReport | null = null;
+    const { cleanUsername } = parseInstagramInput(handleInput);
+    if (!cleanUsername) {
+      setIsAnalyzing(false);
+      setErrorMessage('Please enter a valid Instagram handle or profile URL.');
+      return;
+    }
+
+    const formattedHandle = `@${cleanUsername}`;
+    trackFrameAiStarted(formattedHandle);
 
     try {
       const response = await fetch('/api/instagram-audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: handleInput }),
+        body: JSON.stringify({ username: handleInput.trim() }),
       });
 
-      if (response.ok) {
-        fetchedReport = await response.json();
-      }
-    } catch (err) {
-      console.log('Using local diagnostic fallback engine:', err);
-    }
+      const data = await response.json();
 
-    // If server call was delayed or offline, generate deterministic diagnostic
-    if (!fetchedReport) {
-      fetchedReport = generateStructuredDiagnostic(handleInput);
-    }
-
-    // Keep smooth animated progress experience
-    const startTime = Date.now();
-    const durationMs = 3800;
-
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(100, Math.floor((elapsed / durationMs) * 100));
-      setProgressPercent(progress);
-
-      const stepIdx = Math.min(
-        loadingSteps.length - 1,
-        Math.floor((elapsed / durationMs) * loadingSteps.length)
-      );
-      setActiveStepIndex(stepIdx);
-
-      if (elapsed >= durationMs) {
-        clearInterval(interval);
-        setDiagnosticReport(fetchedReport);
+      if (!response.ok || data.error) {
+        trackFrameAiFailed(formattedHandle);
         setIsAnalyzing(false);
+        setErrorMessage(data.error || 'Unable to reliably verify this Instagram account. Please try again.');
+        return;
       }
-    }, 50);
+
+      // Hard account consistency check on client
+      if (
+        !data.accountVerified?.username ||
+        !verifyAccountConsistency(cleanUsername, data.accountVerified.username)
+      ) {
+        trackFrameAiFailed(formattedHandle);
+        setIsAnalyzing(false);
+        setErrorMessage('Unable to reliably verify this Instagram account. Please try again.');
+        return;
+      }
+
+      // Smooth progress animation
+      const startTime = Date.now();
+      const durationMs = 2800;
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(100, Math.floor((elapsed / durationMs) * 100));
+        setProgressPercent(progress);
+
+        const stepIdx = Math.min(
+          loadingSteps.length - 1,
+          Math.floor((elapsed / durationMs) * loadingSteps.length)
+        );
+        setActiveStepIndex(stepIdx);
+
+        if (elapsed >= durationMs) {
+          clearInterval(interval);
+          setDiagnosticReport(data);
+          setIsAnalyzing(false);
+          trackFrameAiCompleted(
+            formattedHandle,
+            data.frameScore?.overallScore,
+            data.accountVerified?.accountType
+          );
+        }
+      }, 40);
+    } catch {
+      trackFrameAiFailed(formattedHandle);
+      setIsAnalyzing(false);
+      setErrorMessage('Unable to reliably verify this Instagram account. Please try again.');
+    }
   };
 
   const handleConnectWithFrame = () => {
@@ -111,6 +169,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
 
   const handleReset = () => {
     setDiagnosticReport(null);
+    setErrorMessage(null);
     setHandleInput('');
   };
 
@@ -121,6 +180,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
 
   return (
     <section
+      ref={sectionRef}
       id="ai-audit"
       className={`${
         isPage
@@ -147,7 +207,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md text-white flex flex-col items-center justify-center p-4 sm:p-6 select-none"
           >
             <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center text-center">
@@ -212,12 +272,12 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
                   isPage ? 'text-xs sm:text-sm lg:text-[14px] xl:text-[15px] mb-3.5 sm:mb-4' : 'text-xs sm:text-[13px] mb-3'
                 } text-black/80 font-bold leading-snug sm:leading-relaxed max-w-lg`}
               >
-                Enter your Instagram handle to verify account metrics, audit bio clarity,
-                measure reel retention, and calculate your weighted Frame Score.
+                Enter your Instagram handle to verify account metrics, audit profile clarity,
+                and calculate your weighted Frame Score based on actual profile data.
               </p>
 
               {/* Input Form */}
-              <form onSubmit={handleAnalyzeSubmit} className={`${isPage ? 'max-w-md lg:max-w-lg mb-3' : 'max-w-md mb-2.5'} w-full`}>
+              <form onSubmit={handleAnalyzeSubmit} className={`${isPage ? 'max-w-md lg:max-w-lg mb-3.5 sm:mb-4' : 'max-w-md mb-3 sm:mb-3.5'} w-full`}>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
                     <input
@@ -225,7 +285,10 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
                       id="frame-ai-input"
                       placeholder="@username or instagram profile link"
                       value={handleInput}
-                      onChange={(e) => setHandleInput(e.target.value)}
+                      onChange={(e) => {
+                        setHandleInput(e.target.value);
+                        if (errorMessage) setErrorMessage(null);
+                      }}
                       required
                       className={`w-full bg-white text-black border-2 border-black rounded-xl px-3.5 ${
                         isPage ? 'py-2.5 sm:py-3 text-xs sm:text-sm' : 'py-2 sm:py-2.5 text-xs sm:text-sm'
@@ -246,37 +309,20 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
                 </div>
               </form>
 
-              {/* Selectable Brand/Account Boxes (White background, black text, orange accent, matching white UI style) */}
-              <div className="flex flex-wrap items-center gap-1.5 mb-2.5 max-w-md w-full">
-                <span className="text-[10px] font-mono font-black uppercase tracking-wider text-black/75 mr-1">
-                  TRY ACCOUNTS:
-                </span>
-                {[
-                  { name: 'Sakaza', handle: 'sakazaworld' },
-                  { name: 'Grind Up', handle: 'grindup' },
-                  { name: 'Café De Ollas', handle: 'cafedeollas' },
-                  { name: 'Frame2Byte', handle: 'frame2byte' },
-                ].map((account) => (
-                  <button
-                    key={account.handle}
-                    type="button"
-                    onClick={() => setHandleInput(account.handle)}
-                    className={`px-2.5 py-1 bg-white text-black border-2 border-black rounded-lg text-[10px] sm:text-[11px] font-display font-black shadow-[2px_2px_0px_#000] hover:bg-neutral-50 active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer ${
-                      handleInput.toLowerCase().includes(account.handle) ? 'ring-2 ring-black' : ''
-                    }`}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B2F] shrink-0" />
-                    <span>{account.name}</span>
-                  </button>
-                ))}
-              </div>
+              {/* Verification Error Alert */}
+              {errorMessage && (
+                <div className="mb-3.5 p-3 bg-white text-black border-2 border-black rounded-xl shadow-[3px_3px_0px_#000] flex items-center gap-2.5 max-w-md">
+                  <AlertCircle size={18} className="text-[#FF3B2F] shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold text-black">{errorMessage}</span>
+                </div>
+              )}
 
-              {/* 4 Feature Indicator Pills: 2 bubbles per line */}
+              {/* 4 Feature Indicator Pills */}
               <div className="grid grid-cols-2 gap-2 max-w-md w-full">
                 {[
                   'Account Verify',
-                  'Bio Clarity',
-                  'Reel Metrics',
+                  'Profile Gate',
+                  'Social Proof',
                   'Frame Score /100',
                 ].map((item, idx) => (
                   <div
@@ -368,7 +414,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
                     <Target size={13} className="text-[#FF3B2F]" />
                     <span>PRIORITIZED OPPORTUNITY:</span>
                   </span>
-                  <span className="text-[#FF5547] font-bold">Reel Hook Drop-Off</span>
+                  <span className="text-[#FF5547] font-bold">Content-to-Offer Gap</span>
                 </div>
               </div>
             </div>
@@ -380,7 +426,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.25 }}
             className="w-full max-w-4xl lg:max-w-[900px] mx-auto space-y-4 sm:space-y-6 md:space-y-7"
           >
             {/* Top Bar with Reset button */}
@@ -401,7 +447,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
               </button>
             </div>
 
-            {/* ================= 1. ACCOUNT VERIFIED (COMPACT HEADER) ================= */}
+            {/* ================= 1. ACCOUNT VERIFIED (ONLY VERIFIED FACTS) ================= */}
             <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-[4px_4px_0px_#000]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
                 <div className="min-w-0 flex-1">
@@ -410,19 +456,34 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
                       <ShieldCheck size={12} className="text-white" />
                       <span>ACCOUNT VERIFIED</span>
                     </span>
-                    <span className="text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider text-black/60 bg-black/5 border border-black/10 px-2 md:px-2.5 py-0.5 md:py-1 rounded">
-                      {diagnosticReport.accountVerified.businessCategory}
-                    </span>
+                    {diagnosticReport.accountVerified.accountType && (
+                      <span className="text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider text-black/60 bg-black/5 border border-black/10 px-2 md:px-2.5 py-0.5 md:py-1 rounded">
+                        {diagnosticReport.accountVerified.accountType}
+                      </span>
+                    )}
+                    {diagnosticReport.accountVerified.primaryOffering && (
+                      <span className="text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider text-[#FF3B2F] bg-[#FF3B2F]/10 border border-[#FF3B2F]/30 px-2 md:px-2.5 py-0.5 md:py-1 rounded">
+                        {diagnosticReport.accountVerified.primaryOffering}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-baseline gap-2 flex-wrap min-w-0">
                     <h3 className="text-base sm:text-lg md:text-2xl font-display font-black tracking-tight break-all text-[#FF3B2F]">
                       @{cleanReportUsername}
                     </h3>
-                    <span className="text-xs sm:text-sm md:text-base font-semibold text-black/60 truncate">
-                      {diagnosticReport.accountVerified.fullName}
-                    </span>
+                    {diagnosticReport.accountVerified.fullName && (
+                      <span className="text-xs sm:text-sm md:text-base font-semibold text-black/60 truncate">
+                        {diagnosticReport.accountVerified.fullName}
+                      </span>
+                    )}
                   </div>
+
+                  {diagnosticReport.accountVerified.bio && (
+                    <p className="mt-1 text-xs md:text-sm text-black/75 italic border-l-2 border-[#FF3B2F] pl-2 py-0.5 max-w-2xl">
+                      "{diagnosticReport.accountVerified.bio}"
+                    </p>
+                  )}
 
                   {diagnosticReport.accountVerified.externalUrl && (
                     <a
@@ -433,7 +494,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs md:text-sm font-mono text-[#FF3B2F] hover:underline mt-1 break-all"
+                      className="inline-flex items-center gap-1 text-xs md:text-sm font-mono text-[#FF3B2F] hover:underline mt-1 break-all font-semibold"
                     >
                       <span>🔗 {diagnosticReport.accountVerified.externalUrl}</span>
                     </a>
@@ -452,7 +513,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
               </div>
             </div>
 
-            {/* ================= 2. FRAME SCORE (WHITE PALETTE) ================= */}
+            {/* ================= 2. FRAME SCORE ================= */}
             <div className="bg-[#0B0B0B] text-white border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
               <div className="flex items-center justify-between pb-2.5 mb-3.5 md:mb-5 border-b border-white/10">
                 <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest">
@@ -482,14 +543,14 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
                   </span>
                 </div>
 
-                {/* 6 Component Bars (Clean White Accent replacing green) */}
+                {/* 6 Component Bars */}
                 <div className="lg:col-span-8 space-y-2 md:space-y-3">
                   {[
-                    { label: 'Profile Identity', score: diagnosticReport.frameScore.profileIdentity, weight: 'Identity & Bio' },
-                    { label: 'Content Strategy', score: diagnosticReport.frameScore.contentStrategy, weight: 'Formats & Carousels' },
+                    { label: 'Profile Identity', score: diagnosticReport.frameScore.profileIdentity, weight: 'Identity & Gate' },
+                    { label: 'Content Strategy', score: diagnosticReport.frameScore.contentStrategy, weight: 'Formats & Positioning' },
                     { label: 'Reel Performance', score: diagnosticReport.frameScore.reelPerformance, weight: 'Hook & Retention' },
                     { label: 'Engagement', score: diagnosticReport.frameScore.engagement, weight: 'Community Signals' },
-                    { label: 'Consistency', score: diagnosticReport.frameScore.consistency, weight: 'Publishing Cadence' },
+                    { label: 'Consistency', score: diagnosticReport.frameScore.consistency, weight: 'Cadence' },
                     { label: 'Brand Presentation', score: diagnosticReport.frameScore.brandPresentation, weight: 'Visual Hierarchy' },
                   ].map((m, idx) => (
                     <div key={idx}>
@@ -518,14 +579,14 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
               </div>
             </div>
 
-            {/* ================= 3. WHAT’S WORKING ================= */}
+            {/* ================= 3. WHAT’S WORKING (VERIFIED STRENGTHS) ================= */}
             <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
               <div className="inline-flex items-center gap-2 bg-black text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-3.5 md:mb-5 shadow-xs">
                 <CheckCircle2 size={13} className="text-white" />
                 <span>3. WHAT’S WORKING (VERIFIED STRENGTHS)</span>
               </div>
 
-              <div className="grid sm:grid-cols-3 gap-3 md:gap-4">
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                 {diagnosticReport.whatsWorking.map((strength, idx) => (
                   <div
                     key={idx}
@@ -542,139 +603,118 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
               </div>
             </div>
 
-            {/* ================= 4. PRIORITY GROWTH OPPORTUNITIES (COMPACT) ================= */}
+            {/* ================= 4. PRIORITY GROWTH OPPORTUNITIES (ULTRA-COMPACT) ================= */}
             <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
-              <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-3.5 md:mb-5 shadow-xs">
-                <Target size={13} />
-                <span>4. PRIORITY GROWTH OPPORTUNITIES</span>
+              <div className="flex items-center justify-between pb-2 mb-3.5 md:mb-5 border-b border-black/10 flex-wrap gap-2">
+                <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest shadow-xs">
+                  <Target size={13} />
+                  <span>4. PRIORITY GROWTH OPPORTUNITIES</span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-black/50 uppercase tracking-wider">
+                  {diagnosticReport.growthOpportunities.length > 0
+                    ? `${diagnosticReport.growthOpportunities.length} VERIFIED FINDING${
+                        diagnosticReport.growthOpportunities.length === 1 ? '' : 'S'
+                      }`
+                    : 'ALL SIGNALS CLEAR'}
+                </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                {diagnosticReport.growthOpportunities.map((opp) => (
-                  <div
-                    key={opp.priority}
-                    className="p-3.5 md:p-5 bg-[#F5F4EF] border border-black/10 rounded-xl flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-mono font-black text-[10px] md:text-xs bg-black text-white px-1.5 py-0.5 rounded">
-                          0{opp.priority}
-                        </span>
-                        <h4 className="text-xs sm:text-sm md:text-base font-display font-black uppercase text-black">
+              {diagnosticReport.growthOpportunities.length === 0 ? (
+                <div className="p-5 md:p-6 bg-[#F5F4EF] border border-black/15 rounded-xl text-center max-w-md mx-auto">
+                  <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center mx-auto mb-2.5">
+                    <CheckCircle2 size={20} className="text-[#FF3B2F]" />
+                  </div>
+                  <h4 className="text-sm md:text-base font-display font-black uppercase text-black mb-1">
+                    NO SIGNIFICANT BOTTLENECK DETECTED
+                  </h4>
+                  <p className="text-xs md:text-sm text-black/70 font-medium">
+                    Profile signals show strong alignment across your verified gate, positioning, and conversion pathway.
+                  </p>
+                </div>
+              ) : (
+                <div
+                  className={`grid gap-3 md:gap-4 ${
+                    diagnosticReport.growthOpportunities.length === 1
+                      ? 'grid-cols-1 max-w-xl mx-auto'
+                      : diagnosticReport.growthOpportunities.length === 2
+                      ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto'
+                      : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                  }`}
+                >
+                  {diagnosticReport.growthOpportunities.map((opp) => (
+                    <div
+                      key={opp.priority}
+                      className="p-3.5 sm:p-4 bg-[#F5F4EF] border border-black/10 rounded-xl flex flex-col justify-between hover:border-black/30 transition-colors"
+                    >
+                      <div>
+                        {/* Header Badge: 01 · HIGH · [CATEGORY] */}
+                        <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
+                          <span className="font-mono font-black text-[10px] bg-black text-white px-1.5 py-0.5 rounded">
+                            0{opp.priority}
+                          </span>
+                          <span className="text-black/30 text-[10px] font-black">·</span>
+                          {opp.priorityLevel && (
+                            <span
+                              className={`font-mono font-black text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                opp.priorityLevel === 'CRITICAL'
+                                  ? 'bg-[#FF3B2F] text-white'
+                                  : opp.priorityLevel === 'HIGH'
+                                  ? 'bg-black text-white'
+                                  : 'bg-black/15 text-black'
+                              }`}
+                            >
+                              {opp.priorityLevel}
+                            </span>
+                          )}
+                          <span className="text-black/30 text-[10px] font-black">·</span>
+                          <span className="font-mono font-bold text-[9px] text-black/60 uppercase tracking-wider">
+                            {opp.category}
+                          </span>
+                        </div>
+
+                        {/* Short Account-Specific Title */}
+                        <h4 className="text-xs sm:text-sm md:text-base font-display font-black uppercase text-black mb-2 leading-snug">
                           {opp.title}
                         </h4>
+
+                        {/* Ultra-Concise 1-2 Sentence Diagnosis */}
+                        <p className="text-xs sm:text-sm text-black/85 font-medium leading-relaxed">
+                          "{opp.diagnosis || opp.observation}"
+                        </p>
                       </div>
-                      <p className="text-xs md:text-sm font-medium text-black/80 leading-relaxed">
-                        {opp.explanation}
-                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ================= 5. PROFILE ANALYSIS (COMPACT DASHBOARD) ================= */}
-            <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
-              <div className="inline-flex items-center gap-2 bg-black text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-3.5 md:mb-5 shadow-xs">
-                <Eye size={13} className="text-[#FF3B2F]" />
-                <span>5. PROFILE ANALYSIS (CUSTOMER VIEW)</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                {diagnosticReport.profileAnalysis.metrics.map((metric, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3.5 md:p-5 bg-[#F5F4EF] border border-black/10 rounded-xl flex flex-col justify-between"
-                  >
-                    <div className="flex items-center justify-between gap-2 pb-1.5 mb-1.5 md:mb-2 border-b border-black/10">
-                      <span className="text-xs md:text-sm font-mono font-black uppercase text-black">
-                        {metric.label}
-                      </span>
-                      <span className="text-xs md:text-sm font-mono font-black text-[#FF3B2F]">
-                        {metric.score}/100
-                      </span>
-                    </div>
-                    <p className="text-xs md:text-sm font-medium text-black/80 leading-snug md:leading-relaxed">
-                      {metric.insight}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {diagnosticReport.profileAnalysis.genericAiWordingDetected && (
-                <div className="mt-3 md:mt-4 p-2.5 md:p-3.5 bg-[#FFF5F4] border border-[#FF3B2F] rounded-lg text-xs md:text-sm font-semibold text-black flex items-center gap-2">
-                  <AlertCircle size={14} className="text-[#FF3B2F] shrink-0" />
-                  <span>
-                    {diagnosticReport.profileAnalysis.genericWordingNote ||
-                      'Generic/AI-like wording detected in profile bio. Ground bio in concrete customer outcomes.'}
-                  </span>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* ================= 6. REEL ANALYSIS (ONLY IF VERIFIED DATA EXISTS) ================= */}
-            {diagnosticReport.hasVerifiedReelMetrics && diagnosticReport.reelAnalysis && (
-              <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
-                <div className="flex items-center justify-between pb-2 mb-3 md:mb-4 border-b border-black/10 flex-wrap gap-2">
-                  <div className="inline-flex items-center gap-2 bg-black text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest shadow-xs">
-                    <Film size={13} className="text-[#FF3B2F]" />
-                    <span>6. REEL ANALYSIS (SHORT-FORM VIDEO HEALTH)</span>
-                  </div>
-                  <span className="text-xs md:text-sm font-mono font-black text-white bg-black px-2.5 py-0.5 md:px-3 md:py-1 rounded">
-                    SCORE: {diagnosticReport.reelAnalysis.reelPerformanceScore}/100
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 md:gap-3.5 mb-3">
-                  <div className="p-2.5 md:p-3.5 bg-[#F5F4EF] border border-black/10 rounded-lg text-center">
-                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-black/50 uppercase block">REELS ANALYZED</span>
-                    <span className="text-base md:text-xl font-display font-black text-black">
-                      {diagnosticReport.reelAnalysis.reelsAnalyzed}
-                    </span>
-                  </div>
-                  <div className="p-2.5 md:p-3.5 bg-[#F5F4EF] border border-black/10 rounded-lg text-center">
-                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-black/50 uppercase block">AVERAGE VIEWS</span>
-                    <span className="text-base md:text-xl font-display font-black text-black">
-                      {diagnosticReport.reelAnalysis.averageViews}
-                    </span>
-                  </div>
-                  <div className="p-2.5 md:p-3.5 bg-[#F5F4EF] border border-black/10 rounded-lg text-center">
-                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-black/50 uppercase block">MEDIAN VIEWS</span>
-                    <span className="text-base md:text-xl font-display font-black text-black">
-                      {diagnosticReport.reelAnalysis.medianViews}
-                    </span>
-                  </div>
-                  <div className="p-2.5 md:p-3.5 bg-[#F5F4EF] border border-black/10 rounded-lg text-center">
-                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-black/50 uppercase block">TOP REEL</span>
-                    <span className="text-base md:text-xl font-display font-black text-[#FF3B2F]">
-                      {diagnosticReport.reelAnalysis.highestPerformingReel}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ================= 7. ACTIONABLE NEXT STEPS (2x2 ON DESKTOP, 1-COL ON MOBILE) ================= */}
+            {/* ================= 5. EXECUTION BLUEPRINT (DYNAMICALLY DERIVED FROM TOP FINDINGS) ================= */}
             <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
               <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-3.5 md:mb-5 shadow-xs">
                 <Clock size={13} />
-                <span>EXECUTION BLUEPRINT</span>
+                <span>5. EXECUTION BLUEPRINT</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+              <div
+                className={`grid gap-3 md:gap-4 ${
+                  diagnosticReport.nextSteps.length <= 2
+                    ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto'
+                    : 'grid-cols-1 sm:grid-cols-2'
+                }`}
+              >
                 {diagnosticReport.nextSteps.map((step) => (
                   <div
                     key={step.stepNumber}
-                    className="p-3 md:p-4 bg-[#F5F4EF] border border-black/10 rounded-xl flex items-start gap-2.5 md:gap-3"
+                    className="p-3.5 sm:p-4 bg-[#F5F4EF] border border-black/10 rounded-xl flex items-start gap-3"
                   >
-                    <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-black text-white font-mono font-black text-[10px] md:text-xs flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-5 h-5 rounded-full bg-black text-white font-mono font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                       0{step.stepNumber}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h5 className="text-xs sm:text-sm md:text-base font-display font-black uppercase text-black mb-0.5">
+                      <h5 className="text-xs sm:text-sm font-display font-black uppercase text-black mb-0.5 leading-snug">
                         {step.action}
                       </h5>
-                      <p className="text-xs md:text-sm font-medium text-black/80 leading-snug md:leading-relaxed">
+                      <p className="text-xs text-black/80 font-medium leading-snug">
                         {step.detail}
                       </p>
                     </div>
@@ -683,7 +723,7 @@ export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AI
               </div>
             </div>
 
-            {/* ================= 8. HOW FRAME2BYTE CAN HELP (SIMPLIFIED PERSONALIZED CTA) ================= */}
+            {/* ================= 6. HOW FRAME2BYTE CAN HELP ================= */}
             <div className="p-5 sm:p-6 md:p-8 bg-black text-white border-2 border-black rounded-xl sm:rounded-2xl md:rounded-3xl shadow-[6px_6px_0px_rgba(0,0,0,0.85)] relative overflow-hidden">
               <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-2.5 md:mb-4">
                 <Zap size={13} />

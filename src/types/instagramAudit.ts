@@ -1,3 +1,26 @@
+export type AccountType =
+  | 'Product Brand'
+  | 'Service Business'
+  | 'SaaS / Startup'
+  | 'E-commerce'
+  | 'Restaurant / Café / Food Brand'
+  | 'Local Business'
+  | 'Personal Brand'
+  | 'Content Creator'
+  | 'Coach / Educator'
+  | 'Artist / Creative'
+  | 'Account type could not be confidently determined'
+  | 'Other';
+
+export type PrimaryOffering =
+  | 'Physical products'
+  | 'Services'
+  | 'Digital products'
+  | 'Software/SaaS'
+  | 'Food/beverages'
+  | 'Local services'
+  | 'Content/Attention';
+
 export type BusinessCategory =
   | 'Restaurant/F&B'
   | 'E-commerce'
@@ -6,7 +29,28 @@ export type BusinessCategory =
   | 'Personal Brand'
   | 'Local Business'
   | 'Startup'
+  | 'Service Business'
+  | 'Product Brand'
+  | 'Coach/Educator'
+  | 'Artist/Creative'
   | 'Other';
+
+export interface VerifiedInstagramData {
+  requestedUsername: string;
+  verifiedUsername: string;
+  accountName: string;
+  bio: string | null;
+  website: string | null;
+  category: string | null;
+  media: string[];
+  captions: string[];
+  highlights: string[];
+  metrics: {
+    followers?: string | null;
+    following?: string | null;
+    postsCount?: string | null;
+  };
+}
 
 export interface VerifiedAccountInfo {
   username: string;
@@ -17,11 +61,15 @@ export interface VerifiedAccountInfo {
   followers?: string | null;
   following?: string | null;
   postsCount?: string | null;
-  bio?: string;
+  bio?: string | null;
   externalUrl?: string | null;
   isVerifiedBadge?: boolean;
   businessCategory: BusinessCategory;
+  accountType?: AccountType;
+  primaryOffering?: PrimaryOffering;
   categoryWeightingNote: string;
+  classificationEvidence?: string[];
+  verifiedDataPoints?: string[];
 }
 
 export interface FrameScoreBreakdown {
@@ -41,10 +89,25 @@ export interface CompactProfileMetric {
   insight: string;
 }
 
+export type BioVulnerabilityType =
+  | 'VAGUE_POSITIONING'
+  | 'TOO_LONG'
+  | 'CONFUSING'
+  | 'WEAK_CTA'
+  | 'GENERIC_LANGUAGE'
+  | 'TOO_CASUAL'
+  | 'MISSING_VALUE_PROP'
+  | 'MISSING_TRUST_SIGNAL'
+  | 'NONE';
+
 export interface ProfileCustomerViewAnalysis {
   metrics: CompactProfileMetric[];
   genericAiWordingDetected: boolean;
   genericWordingNote?: string;
+  bioVulnerabilityType?: BioVulnerabilityType;
+  bioVulnerabilityDetail?: string;
+  visualConsistencyScore?: number;
+  visualConsistencyNote?: string;
 }
 
 export interface ReelAnalysisData {
@@ -56,13 +119,22 @@ export interface ReelAnalysisData {
   recentPerformance?: string;
   reelConsistency?: string;
   reelPerformanceScore: number;
+  contentToOfferAlignment?: 'STRONG' | 'PARTIAL' | 'DISCONNECTED';
+  alignmentNote?: string;
 }
 
+export type VulnerabilityPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
 export interface GrowthOpportunity {
-  priority: 1 | 2 | 3;
+  priority: number;
+  priorityLevel?: VulnerabilityPriority;
+  category: string;
   title: string;
-  explanation: string;
-  tag?: string;
+  diagnosis: string;
+  observation?: string;
+  opportunity?: string;
+  whyItMatters?: string;
+  explanation?: string;
 }
 
 export interface PracticalNextStep {
@@ -77,10 +149,12 @@ export interface StructuredDiagnosticReport {
   frameScore: FrameScoreBreakdown;
   whatsWorking: string[];
   growthOpportunities: GrowthOpportunity[];
+  noIssuesDetected?: boolean;
   profileAnalysis: ProfileCustomerViewAnalysis;
   reelAnalysis?: ReelAnalysisData;
   hasVerifiedReelMetrics: boolean;
   nextSteps: PracticalNextStep[];
   helpHeadline: string;
   helpSentence: string;
+  rawVerifiedData?: VerifiedInstagramData;
 }

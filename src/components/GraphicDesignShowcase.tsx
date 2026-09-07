@@ -171,7 +171,7 @@ export default function GraphicDesignShowcase({
         <span className="flex items-center gap-1.5 text-black font-extrabold">
           <span className="w-2 h-2 rounded-full bg-[#FF3B2F] animate-pulse shrink-0" />
           <span>
-            SLIDE TO <span className="text-[#FF3B2F]">SCROLL</span>
+            HOLD OR <span className="text-[#FF3B2F]">SLIDE</span>
           </span>
         </span>
         <span className="text-[#FF3B2F] font-mono font-black bg-white border border-black/10 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs shadow-xs">
@@ -227,6 +227,28 @@ export default function GraphicDesignShowcase({
         >
           <ChevronRight size={15} className="stroke-[3]" />
         </button>
+      </div>
+
+      {/* Numbered Indicators */}
+      <div className="flex items-center justify-between px-9 sm:px-11 pt-1.5 text-[10px] sm:text-[11px] font-mono">
+        {items.map((_, idx) => {
+          const isActive = idx === activeIndex;
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setActiveIndex(idx)}
+              className={`cursor-pointer transition-all duration-150 px-1.5 py-0.5 rounded font-black ${
+                isActive
+                  ? 'text-[#FF3B2F] scale-110'
+                  : 'text-black/40 hover:text-black hover:scale-105'
+              }`}
+              aria-label={`Jump to Pin ${idx + 1}`}
+            >
+              {String(idx + 1).padStart(2, '0')}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

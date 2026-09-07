@@ -2,6 +2,10 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { initGoogleAnalytics } from './utils/analytics';
+
+// Initialize minimal, privacy-first Google Analytics if VITE_GA_MEASUREMENT_ID is configured
+initGoogleAnalytics();
 
 // Prevent noisy browser error banners from benign HMR websocket reconnection attempts in container environments
 if (typeof window !== 'undefined') {

@@ -6,23 +6,19 @@ import GraphicDesignShowcase from './GraphicDesignShowcase';
 import ReelShowcase from './ReelShowcase';
 
 const showcaseReels = [
-  { id: 1, title: 'REEL 01', category: 'BRAND SHOWCASE', src: '/videos/video1.mp4' },
-  { id: 2, title: 'REEL 02', category: 'SHORT-FORM EDIT', src: '/videos/video3.mp4' },
-  { id: 3, title: 'REEL 03', category: 'GROWTH CONTENT', src: '/videos/video7.mp4' },
-  { id: 4, title: 'REEL 04', category: 'VIRAL CAMPAIGN', src: '/videos/video8.mp4' },
-  { id: 5, title: 'REEL 05', category: 'HIGH RETENTION', src: '/videos/video9.mp4' },
-  { id: 6, title: 'REEL 06', category: 'MOTION EDIT', src: '/videos/video12.mp4' },
+  { id: 1, title: 'REEL 01', category: 'SHORT-FORM EDIT', src: '/videos/video3.mp4' },
+  { id: 2, title: 'REEL 02', category: 'GROWTH CONTENT', src: '/videos/video7.mp4' },
+  { id: 3, title: 'REEL 03', category: 'VIRAL CAMPAIGN', src: '/videos/video8.mp4' },
+  { id: 4, title: 'REEL 04', category: 'HIGH RETENTION', src: '/videos/video9.mp4' },
+  { id: 5, title: 'REEL 05', category: 'MOTION EDIT', src: '/videos/video12.mp4' },
 ];
 
 const showcaseDesigns = [
   { id: 101, title: 'GRAPHIC 01', category: 'BRAND IDENTITY', src: '/images/image8.jpeg' },
-  { id: 102, title: 'GRAPHIC 02', category: 'CREATIVE POSTER', src: '/images/image9.jpeg' },
-  { id: 103, title: 'GRAPHIC 03', category: 'AI CAMPAIGN', src: '/images/image10.jpeg' },
-  { id: 104, title: 'GRAPHIC 04', category: 'SOCIAL CREATIVE', src: '/images/images2.png' },
-  { id: 105, title: 'GRAPHIC 05', category: 'BRANDING POST', src: '/images/images3.png' },
-  { id: 106, title: 'GRAPHIC 06', category: 'MARKETING ASSET', src: '/images/whatsapp_post.jpeg' },
-  { id: 107, title: 'GRAPHIC 07', category: 'E-COMMERCE DESIGN', src: '/images/grindup_post1.png' },
-  { id: 108, title: 'GRAPHIC 08', category: 'EDITORIAL ARTWORK', src: '/images/image7.jpg' },
+  { id: 102, title: 'GRAPHIC 02', category: 'AI CAMPAIGN', src: '/images/image10.jpeg' },
+  { id: 103, title: 'GRAPHIC 03', category: 'BRANDING POST', src: '/images/images3.png' },
+  { id: 104, title: 'GRAPHIC 04', category: 'MARKETING ASSET', src: '/images/whatsapp_post.jpeg' },
+  { id: 105, title: 'GRAPHIC 05', category: 'E-COMMERCE DESIGN', src: '/images/grindup_post1.png' },
 ];
 
 function Modal({ isOpen, onClose, children }: { isOpen: boolean, onClose: () => void, children: React.ReactNode }) {

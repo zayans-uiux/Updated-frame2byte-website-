@@ -1,6 +1,7 @@
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import { CurrencyProvider } from './context/CurrencyContext';
+import { trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import Footer from './components/Footer';
@@ -54,12 +55,23 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 
+function PageTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageView(location.pathname + (location.hash ? location.hash : ''));
+  }, [location.pathname, location.hash]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <CurrencyProvider>
         <VideoPreloader />
         <Router>
+          <PageTracker />
           <ScrollToTop />
           <CustomCursor />
           <div className="min-h-screen bg-[#0B0B0B] text-white selection:bg-[#FF6A00]/30">
