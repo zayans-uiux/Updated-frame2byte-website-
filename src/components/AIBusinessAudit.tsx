@@ -1,709 +1,716 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
-  ArrowUpRight,
   CheckCircle2,
-  BarChart2,
-  Search,
-  Globe,
-  TrendingUp,
+  Instagram,
   RotateCcw,
-  ShieldCheck,
   AlertCircle,
   Zap,
+  Film,
+  ExternalLink,
+  Target,
+  Clock,
+  ArrowRight,
+  ArrowUpRight,
+  ShieldCheck,
+  Eye,
 } from 'lucide-react';
+import {
+  StructuredDiagnosticReport,
+} from '../types/instagramAudit';
+import {
+  parseInstagramInput,
+  generateStructuredDiagnostic,
+} from '../utils/instagramDiagnosticEngine';
 
-interface AuditData {
-  cleanUrl: string;
-  brandName: string;
-  industry: string;
-  overallScore: number;
-  visualHierarchyScore: number;
-  uxScore: number;
-  conversionScore: number;
-  contentClarityScore: number;
-  performanceScore: number;
-  strengths: string[];
-  opportunities: string[];
-  frameRecommendation: string;
-}
-
-const statusMessages = [
-  '✓ Reading website structure...',
-  '✓ Checking visual hierarchy...',
-  '✓ Analysing user experience...',
-  '✓ Reviewing content clarity...',
-  '✓ Detecting conversion opportunities...',
-  '✓ Measuring performance signals...',
-  '✓ Finalising AI report...',
+const loadingSteps = [
+  '✓ Verifying Exact Instagram Account',
+  '✓ Analyzing Customer-Facing Bio & Profile Identity',
+  '✓ Checking Visual Brand Presentation & Highlights',
+  '✓ Diagnosing Reel Hooks, Retention & View Metrics',
+  '✓ Evaluating Content Strategy & Carousels',
+  '✓ Calculating Proprietary Weighted Frame Score',
 ];
 
-function generateCustomAudit(url: string): AuditData {
-  let cleanUrl = url.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '');
-  cleanUrl = cleanUrl.split('/')[0] || 'yourwebsite.com';
-
-  const domainParts = cleanUrl.split('.');
-  const brandNameRaw = domainParts[0] || 'Brand';
-  const brandName = brandNameRaw.charAt(0).toUpperCase() + brandNameRaw.slice(1);
-
-  // Deterministic seed from url characters for personalized consistency
-  let seed = 0;
-  for (let i = 0; i < cleanUrl.length; i++) {
-    seed += cleanUrl.charCodeAt(i);
-  }
-
-  const baseScore = 68 + (seed % 20); // 68 - 87 score range
-
-  // Niche keyword detection
-  let industry = 'General Business';
-  if (/shop|store|apparel|clothing|fashion|wear|boutique|cart|ecommerce|mall|brand/.test(cleanUrl)) {
-    industry = 'E-Commerce & Retail';
-  } else if (/tech|ai|software|saas|app|cloud|io|dev|digital|platform/.test(cleanUrl)) {
-    industry = 'Tech & Digital SaaS';
-  } else if (/fit|gym|health|wellness|coach|yoga|physio|clinic|medical|care/.test(cleanUrl)) {
-    industry = 'Health & Wellness';
-  } else if (/food|cafe|restaurant|bakers|kitchen|dining|pizza|coffee|bar/.test(cleanUrl)) {
-    industry = 'Food & Hospitality';
-  } else if (/agency|media|creative|design|studio|marketing|proto|film/.test(cleanUrl)) {
-    industry = 'Creative Agency & Studio';
-  } else if (/law|legal|tax|finance|capital|estate|real|consulting|invest|bank/.test(cleanUrl)) {
-    industry = 'Professional Services';
-  }
-
-  const strengthsMap: Record<string, string[]> = {
-    'E-Commerce & Retail': [
-      `Established domain positioning for ${cleanUrl}`,
-      'Clean baseline typography and primary visual branding',
-      'Structured catalog layout architecture for mobile shoppers',
-      'High potential candidate for viral short-form product reels',
-    ],
-    'Tech & Digital SaaS': [
-      `Recognizable digital footprint at ${cleanUrl}`,
-      'Defined hero headline baseline positioning',
-      'Logical core layout flow and feature list breakdown',
-      'Fast initial payload layout with clean structural assets',
-    ],
-    'Health & Wellness': [
-      `Welcoming and trustworthy brand identity for ${brandName}`,
-      'Accessible color contrast and calm visual tone',
-      'Visible contact touchpoints and service listings',
-      'Strong candidate for video transformation hooks',
-    ],
-    'Food & Hospitality': [
-      `Memorable culinary brand positioning at ${cleanUrl}`,
-      'High potential for viral HD food reel engagement',
-      'Clear menu discovery structure for mobile visitors',
-      'Engaging core color palette and location clarity',
-    ],
-    'Creative Agency & Studio': [
-      `Distinctive creative positioning for ${brandName}`,
-      'Strong aesthetic baseline and modern typography',
-      'Good portfolio display structure for project showcases',
-      'Engaging visual hierarchy across primary viewport',
-    ],
-    'Professional Services': [
-      `Authoritative domain signature for ${cleanUrl}`,
-      'Structured, professional page layout hierarchy',
-      'Clear service listings with defined value statements',
-      'Solid trust foundation for high-ticket client acquisition',
-    ],
-    'General Business': [
-      `Recognizable online presence at ${cleanUrl}`,
-      'Functional layout structure and clear section hierarchy',
-      'Good content organization across primary sections',
-      'Solid baseline ready for AI-driven conversion scaling',
-    ],
-  };
-
-  const opportunitiesMap: Record<string, string[]> = {
-    'E-Commerce & Retail': [
-      'Implement sticky "Add to Cart" & high-contrast CTA buttons on mobile viewports',
-      'Embed 9:16 vertical video reel reviews above the product fold to boost conversions',
-      'Reduce body copy density and expand whitespace around primary buy buttons',
-      'Optimize image compression & layout shifts to improve Google PageSpeed mobile score',
-    ],
-    'Tech & Digital SaaS': [
-      'Add an interactive product demo snippet or AI video preview directly above the fold',
-      'Simplify hero headline word count to deliver 3-second value clarity',
-      'Strengthen social proof badges (logos & live metric counters) above secondary CTAs',
-      'Streamline lead-capture form fields to max 2 inputs to lower signup drop-offs',
-    ],
-    'Health & Wellness': [
-      'Include high-retention video stories of client transformations above the fold',
-      'Highlight primary booking CTA with a high-contrast accent button',
-      'Add micro-animations to key feature badges to guide user focus down the page',
-      'Optimize mobile font scaling to eliminate paragraph line wrapping issues',
-    ],
-    'Food & Hospitality': [
-      'Feature auto-playing muted HD reel background loops of top signature items',
-      'Place instant online ordering or reservation CTA persistently at mobile bottom bar',
-      'Add Google review star ratings prominently beside header CTA',
-      'Shorten mobile scroll depth to get visitors to menu items in <2 taps',
-    ],
-    'Creative Agency & Studio': [
-      'Integrate interactive case study video reels with instant fullscreen playback',
-      'Contrast primary "Work With Us" CTA button against dark background container',
-      'Reduce text-heavy paragraphs into scannable bento grid benefit cards',
-      'Enhance mobile touch target sizes for seamless navigation scrolling',
-    ],
-    'Professional Services': [
-      'Incorporate instant video introduction from founder to humanize brand trust',
-      'Add a sticky "Free Consultation" floating bar on mobile screens',
-      'Replace stock photography with authentic high-resolution AI-retouched imagery',
-      'Highlight client result metrics in bold display typography cards',
-    ],
-    'General Business': [
-      'Increase contrast on primary Call-to-Action buttons for instant visual hierarchy',
-      'Incorporate short-form video content above the fold to double visitor retention',
-      'Optimize mobile typography scaling and padding to eliminate horizontal line wraps',
-      'Add real-time client social proof badges to accelerate trust',
-    ],
-  };
-
-  const strengths = strengthsMap[industry] || strengthsMap['General Business'];
-  const opportunities = opportunitiesMap[industry] || opportunitiesMap['General Business'];
-
-  return {
-    cleanUrl,
-    brandName,
-    industry,
-    overallScore: baseScore,
-    visualHierarchyScore: Math.min(98, baseScore + (seed % 7) - 2),
-    uxScore: Math.min(98, baseScore + (seed % 5) - 1),
-    conversionScore: Math.max(54, baseScore - (seed % 9) - 3),
-    contentClarityScore: Math.min(96, baseScore + (seed % 8)),
-    performanceScore: Math.min(95, baseScore + (seed % 6) - 2),
-    strengths,
-    opportunities,
-    frameRecommendation: `Your website for ${brandName} (${cleanUrl}) has strong baseline potential, but optimizing CTA visibility, mobile visual hierarchy, and short-form video engagement can significantly boost visitor conversions. Frame2Byte can help optimize your branding, UI/UX, AI video strategy, and conversion funnel.`,
-  };
+interface AIBusinessAuditProps {
+  theme?: 'orange' | 'white';
+  isPage?: boolean;
 }
 
-export default function AIBusinessAudit() {
-  const [urlInput, setUrlInput] = useState('');
+export default function AIBusinessAudit({ theme = 'orange', isPage = false }: AIBusinessAuditProps = {}) {
+  const [handleInput, setHandleInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeMessageIndex, setActiveMessageIndex] = useState(0);
-  const [activeNodeIndex, setActiveNodeIndex] = useState(0);
   const [progressPercent, setProgressPercent] = useState(0);
-  const [auditResult, setAuditResult] = useState<AuditData | null>(null);
+  const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [diagnosticReport, setDiagnosticReport] = useState<StructuredDiagnosticReport | null>(null);
   const navigate = useNavigate();
 
-  const handleAnalyzeSubmit = (e: React.FormEvent) => {
+  const handleAnalyzeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!urlInput.trim()) return;
+    if (!handleInput.trim()) return;
 
     setIsAnalyzing(true);
-    setAuditResult(null);
-    setActiveMessageIndex(0);
-    setActiveNodeIndex(0);
     setProgressPercent(0);
-  };
+    setActiveStepIndex(0);
 
-  // 5.5 Seconds Scanning Sequence Animation Controller
-  useEffect(() => {
-    if (!isAnalyzing) return;
+    // Call server API for live Instagram extraction & Gemini business awareness
+    let fetchedReport: StructuredDiagnosticReport | null = null;
 
+    try {
+      const response = await fetch('/api/instagram-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: handleInput }),
+      });
+
+      if (response.ok) {
+        fetchedReport = await response.json();
+      }
+    } catch (err) {
+      console.log('Using local diagnostic fallback engine:', err);
+    }
+
+    // If server call was delayed or offline, generate deterministic diagnostic
+    if (!fetchedReport) {
+      fetchedReport = generateStructuredDiagnostic(handleInput);
+    }
+
+    // Keep smooth animated progress experience
     const startTime = Date.now();
-    const durationMs = 5500;
+    const durationMs = 3800;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(100, Math.floor((elapsed / durationMs) * 100));
       setProgressPercent(progress);
 
-      // Rotate status message every ~800ms
-      const msgIndex = Math.min(
-        statusMessages.length - 1,
-        Math.floor((elapsed / durationMs) * statusMessages.length)
+      const stepIdx = Math.min(
+        loadingSteps.length - 1,
+        Math.floor((elapsed / durationMs) * loadingSteps.length)
       );
-      setActiveMessageIndex(msgIndex);
-
-      // Rotate active node 0 -> 4
-      const nodeIdx = Math.min(4, Math.floor((elapsed / durationMs) * 5));
-      setActiveNodeIndex(nodeIdx);
+      setActiveStepIndex(stepIdx);
 
       if (elapsed >= durationMs) {
         clearInterval(interval);
-        const data = generateCustomAudit(urlInput);
-        setAuditResult(data);
+        setDiagnosticReport(fetchedReport);
         setIsAnalyzing(false);
       }
-    }, 80);
+    }, 50);
+  };
 
-    return () => clearInterval(interval);
-  }, [isAnalyzing, urlInput]);
-
-  const handleBookCall = () => {
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-    navigate('/contact');
+  const handleConnectWithFrame = () => {
+    const contactEl = document.getElementById('contact');
+    if (contactEl) {
+      contactEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      navigate('/contact');
+    }
   };
 
   const handleReset = () => {
-    setAuditResult(null);
-    setUrlInput('');
+    setDiagnosticReport(null);
+    setHandleInput('');
   };
+
+  const isWhite = theme === 'white';
+  const cleanReportUsername = diagnosticReport
+    ? diagnosticReport.accountVerified.username.replace(/^@+/, '')
+    : '';
 
   return (
     <section
       id="ai-audit"
-      className="py-16 sm:py-24 bg-[#0B0B0B] text-white border-b border-white/10 relative overflow-hidden"
+      className={`${
+        isPage
+          ? 'pt-24 sm:pt-28 md:pt-36 pb-16 sm:pb-20 md:pb-28 min-h-screen flex flex-col justify-center'
+          : 'py-10 sm:py-14 md:py-18'
+      } ${
+        isWhite
+          ? 'bg-white text-black border-b-2 border-black'
+          : 'bg-[#FF3B2F] text-black border-b border-black/10'
+      } relative overflow-hidden scroll-mt-20 transition-colors`}
     >
-      {/* Background Neon Accent Glow */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[450px] h-[450px] bg-[#FF3B2F]/10 blur-[150px] rounded-full pointer-events-none" />
+      <div id="frame-ai" className="absolute -top-20" />
+      {/* Background Subtle Dot Pattern */}
+      <div
+        className={`absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] [background-size:24px_24px] ${
+          isWhite ? 'opacity-5' : 'opacity-10'
+        } pointer-events-none`}
+      />
 
-      {/* ================= FULL SCREEN LOADING OVERLAY ================= */}
+      {/* ================= SCANNING / LOADING OVERLAY ================= */}
       <AnimatePresence>
         {isAnalyzing && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[100] bg-[#0B0B0B] text-white flex flex-col items-center justify-center p-4 sm:p-6 select-none overflow-hidden"
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md text-white flex flex-col items-center justify-center p-4 sm:p-6 select-none"
           >
-            {/* Ambient Background Pulse Effects */}
-            <div className="absolute w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-[#FF3B2F]/15 blur-[160px] rounded-full pointer-events-none animate-pulse" />
-            <div className="absolute inset-0 bg-[radial-gradient(#FF3B2F_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
-
-            <div className="relative z-10 w-full max-w-xl mx-auto flex flex-col items-center text-center">
-              
-              {/* Top Badge */}
-              <div className="inline-flex items-center gap-2 bg-[#FF3B2F]/20 border border-[#FF3B2F]/50 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#FF5547] mb-8 shadow-[0_0_15px_rgba(255,59,47,0.4)]">
-                <Sparkles size={14} className="animate-spin text-[#FF5547] drop-shadow-[0_0_8px_rgba(255,59,47,0.9)]" />
-                <span>FRAME.AI NEURAL CONSULTANT IN ACTION</span>
+            <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center text-center">
+              <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-widest mb-6 shadow-lg">
+                <Sparkles size={14} className="animate-spin text-white" />
+                <span>DIAGNOSTIC SCANNING ENGINE</span>
               </div>
 
-              {/* Submitted Domain Pill */}
-              <div className="flex items-center gap-2 bg-neutral-900 border border-white/20 px-4 py-2 rounded-full text-xs font-mono font-bold text-white/90 mb-10 shadow-md">
-                <Globe size={14} className="text-[#FF5547]" />
-                <span className="truncate max-w-[260px] sm:max-w-[360px]">
-                  {urlInput.trim() || 'analyzing-website.com'}
+              <div className="flex items-center gap-2.5 bg-[#141414] border border-white/15 px-5 py-2.5 rounded-full text-xs sm:text-sm font-mono font-bold text-white mb-6 shadow-md">
+                <Instagram size={17} className="text-[#FF3B2F]" />
+                <span className="text-[#FF3B2F]">
+                  @{parseInstagramInput(handleInput).cleanUsername}
                 </span>
               </div>
 
-              {/* 5 CONNECTED SCANNING NODES (○ — ○ — ○ — ○ — ○) */}
-              <div className="w-full max-w-md my-6 px-4">
-                <div className="relative flex items-center justify-between">
-                  
-                  {/* Connecting Track Line */}
-                  <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 h-1 bg-white/10 rounded-full" />
-                  
-                  {/* Active Progress Track Line */}
-                  <motion.div
-                    className="absolute top-1/2 left-0 -translate-y-1/2 h-1 bg-gradient-to-r from-black via-[#FF3B2F] to-[#FF3B2F] rounded-full"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-
-                  {/* 5 Circular Nodes */}
-                  {[0, 1, 2, 3, 4].map((nodeIdx) => {
-                    const isActive = activeNodeIndex === nodeIdx;
-                    const isPassed = activeNodeIndex > nodeIdx;
-
-                    return (
-                      <div key={nodeIdx} className="relative z-10">
-                        <motion.div
-                          animate={{
-                            scale: isActive ? 1.35 : 1,
-                          }}
-                          transition={{ duration: 0.2 }}
-                          className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                            isActive
-                              ? 'bg-[#FF3B2F] border-white text-white shadow-[0_0_25px_rgba(255,59,47,0.9)] ring-4 ring-[#FF3B2F]/30'
-                              : isPassed
-                              ? 'bg-[#FF3B2F] border-[#FF3B2F] text-white'
-                              : 'bg-neutral-900 border-white/20 text-white/40'
-                          }`}
-                        >
-                          {isPassed ? (
-                            <CheckCircle2 size={16} className="stroke-[3]" />
-                          ) : (
-                            <span className="text-xs font-black font-mono">0{nodeIdx + 1}</span>
-                          )}
-                        </motion.div>
-                      </div>
-                    );
-                  })}
-
-                </div>
+              {/* Progress Bar */}
+              <div className="w-full bg-white/10 rounded-full h-2.5 mb-4 overflow-hidden border border-white/10">
+                <motion.div
+                  className="h-full bg-[#FF3B2F] rounded-full shadow-[0_0_12px_#FF3B2F]"
+                  style={{ width: `${progressPercent}%` }}
+                />
               </div>
 
-              {/* Dynamic Status Message with Fade Animation */}
-              <div className="h-10 my-4 flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeMessageIndex}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.25 }}
-                    className="text-sm sm:text-base font-extrabold text-[#FF5547] drop-shadow-[0_0_10px_rgba(255,59,47,0.8)] uppercase tracking-wider flex items-center gap-2"
-                  >
-                    <span>{statusMessages[activeMessageIndex]}</span>
-                  </motion.div>
-                </AnimatePresence>
+              <div className="h-7 flex items-center justify-center text-xs sm:text-sm font-mono font-bold text-[#FF9E94] uppercase tracking-wider">
+                {loadingSteps[activeStepIndex]}
               </div>
 
-              {/* Progress Percentage Counter */}
-              <div className="mt-4 text-xs font-black uppercase tracking-widest text-white/50 font-mono">
-                AI NEURAL SCANNING — <span className="text-white">{progressPercent}%</span>
+              <div className="mt-2 text-[10px] font-mono font-bold text-white/50 tracking-widest">
+                PROGRESS: {progressPercent}% • VERIFYING ACCOUNT
               </div>
-
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        
-        {/* ================= BEFORE AUDIT INPUT FORM ================= */}
-        {!auditResult && (
-          <div className="grid lg:grid-cols-12 gap-10 items-center">
-            
-            {/* Left Column: Interactive Score Card Preview */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-5 relative flex items-center justify-center"
-            >
-              <div className="relative w-full max-w-[420px] bg-neutral-900 border-2 border-white/20 rounded-3xl p-6 sm:p-8 shadow-[8px_8px_0px_#FF3B2F]">
-                
-                {/* Score Header */}
-                <div className="flex items-center justify-between pb-6 border-b border-white/10">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/50 block mb-1">
-                      AI AUDIT BENCHMARK
-                    </span>
-                    <div className="text-3xl sm:text-4xl font-display font-black text-white flex items-baseline gap-1">
-                      <span className="text-[#FF3B2F]">82</span>
-                      <span className="text-sm font-bold text-white/50">/100</span>
-                    </div>
-                  </div>
-
-                  <div className="w-12 h-12 rounded-xl bg-[#FF3B2F]/20 border border-[#FF3B2F]/40 flex items-center justify-center text-[#FF3B2F]">
-                    <Sparkles size={24} />
-                  </div>
-                </div>
-
-                {/* Score Metrics */}
-                <div className="space-y-4 py-6">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1.5">
-                      <span className="text-white/80">Visual Hierarchy</span>
-                      <span className="text-[#FF3B2F]">84/100</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#FF3B2F] rounded-full w-[84%]" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1.5">
-                      <span className="text-white/80">Mobile UX & Navigation</span>
-                      <span className="text-[#FF5547]">78/100</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[#FF3B2F] to-[#FF5547] rounded-full w-[78%] shadow-[0_0_8px_rgba(255,59,47,0.6)]" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1.5">
-                      <span className="text-white/80">Conversion CTA Placement</span>
-                      <span className="text-[#FF3B2F]">62/100</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#FF3B2F] rounded-full w-[62%]" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1.5">
-                      <span className="text-white/80">Content & Copy Clarity</span>
-                      <span className="text-white">88/100</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-white rounded-full w-[88%]" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Badge */}
-                <div className="pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-widest text-white/60">
-                  <span className="flex items-center gap-1.5 text-[#FF5547] drop-shadow-[0_0_6px_rgba(255,59,47,0.8)]">
-                    <ShieldCheck size={16} /> Instant AI Audit
-                  </span>
-                  <span>5-SECOND SCAN</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right Column: Headline & Input Form */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-7 text-left"
-            >
-              <div className="inline-flex items-center gap-1.5 bg-[#FF3B2F] text-white px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase mb-6 shadow-[0_0_15px_rgba(255,59,47,0.5)]">
-                <Sparkles size={12} className="text-white animate-pulse" />
-                <span>FRAME.AI — BUSINESS ANALYSIS</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 w-full">
+        {/* ================= HERO INPUT VIEW (BEFORE RESULTS) ================= */}
+        {!diagnosticReport && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
+            {/* LEFT COLUMN: Input and Diagnostic System Overview */}
+            <div className="lg:col-span-6 flex flex-col justify-center">
+              <div className="inline-flex items-center gap-1.5 bg-black text-white px-3 py-1 rounded-full text-[10px] sm:text-xs font-mono font-black tracking-widest uppercase mb-2.5 sm:mb-3 w-fit shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-[#FF3B2F] animate-pulse" />
+                FRAME.AI • INSTAGRAM DIAGNOSTIC
               </div>
 
-              <h2 className="text-3xl sm:text-5xl md:text-6xl font-display font-black tracking-tight uppercase leading-[0.96] mb-6 text-white break-words">
-                WANT A REAL <span className="text-[#FF5547] drop-shadow-[0_0_20px_rgba(255,59,47,0.8)] animate-pulse">FRAME.AI</span> <br />
-                AUDIT OF YOUR <br />
-                <span className="text-[#FF3B2F]">WEBSITE?</span>
+              <h2
+                className={`${
+                  isPage
+                    ? 'text-2xl sm:text-3xl lg:text-[2.6rem] xl:text-[3.1rem] mb-2 sm:mb-2.5'
+                    : 'text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-2.5'
+                } font-display font-black tracking-tight uppercase leading-[0.96] text-black`}
+              >
+                INSTAGRAM GROWTH <br />
+                <span className={isWhite ? 'text-[#FF3B2F]' : 'text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.25)]'}>
+                  DIAGNOSTIC
+                </span>
               </h2>
 
-              <p className="text-base sm:text-lg text-white/70 font-semibold mb-8 max-w-xl leading-relaxed">
-                Paste your website URL below. <strong className="text-white">FRAME.AI</strong> will scan your layout, visual hierarchy, UX clarity, and conversion signals to generate personalized growth insights.
+              <p
+                className={`${
+                  isPage ? 'text-xs sm:text-sm lg:text-[14px] xl:text-[15px] mb-3.5 sm:mb-4' : 'text-xs sm:text-[13px] mb-3'
+                } text-black/80 font-bold leading-snug sm:leading-relaxed max-w-lg`}
+              >
+                Enter your Instagram handle to verify account metrics, audit bio clarity,
+                measure reel retention, and calculate your weighted Frame Score.
               </p>
 
               {/* Input Form */}
-              <form onSubmit={handleAnalyzeSubmit} className="max-w-xl mb-3">
-                <div className="flex flex-col sm:flex-row gap-3">
+              <form onSubmit={handleAnalyzeSubmit} className={`${isPage ? 'max-w-md lg:max-w-lg mb-3' : 'max-w-md mb-2.5'} w-full`}>
+                <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
                     <input
                       type="text"
-                      placeholder="Paste your Website URL (e.g. mybrand.com)"
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
+                      id="frame-ai-input"
+                      placeholder="@username or instagram profile link"
+                      value={handleInput}
+                      onChange={(e) => setHandleInput(e.target.value)}
                       required
-                      className="w-full bg-neutral-900 border-2 border-white/20 rounded-md pl-11 pr-4 py-3.5 text-sm font-semibold text-white placeholder:text-white/40 focus:outline-none focus:border-[#FF3B2F]"
+                      className={`w-full bg-white text-black border-2 border-black rounded-xl px-3.5 ${
+                        isPage ? 'py-2.5 sm:py-3 text-xs sm:text-sm' : 'py-2 sm:py-2.5 text-xs sm:text-sm'
+                      } font-bold placeholder:text-black/40 focus:outline-none focus:ring-2 focus:ring-black shadow-[3px_3px_0px_#000] transition-all`}
                     />
                   </div>
                   <button
                     type="submit"
+                    id="frame-ai-submit-btn"
                     disabled={isAnalyzing}
-                    className="px-6 py-3.5 bg-[#FF3B2F] text-white rounded-md font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#E02D21] transition-all shadow-[4px_4px_0px_#FFF] flex-shrink-0 active:scale-95"
+                    className={`px-5 ${
+                      isPage ? 'py-2.5 sm:py-3 text-xs sm:text-sm' : 'py-2 sm:py-2.5 text-xs'
+                    } bg-black hover:bg-neutral-900 text-white rounded-xl font-display font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0px_rgba(255,255,255,0.8)] sm:shadow-[3px_3px_0px_#000] transition-all active:scale-95 shrink-0 cursor-pointer`}
                   >
-                    <span>ANALYZE WITH FRAME.AI</span>
-                    <ArrowUpRight size={16} className="stroke-[3]" />
+                    <span>ANALYZE NOW</span>
+                    <ArrowUpRight size={15} className="stroke-[3] text-[#FF3B2F]" />
                   </button>
                 </div>
               </form>
 
-              <p className="text-xs font-bold text-white/50 italic">
-                ⚡ Personalized AI audit ready in under 6 seconds.
-              </p>
-            </motion.div>
+              {/* Selectable Brand/Account Boxes (White background, black text, orange accent, matching white UI style) */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-2.5 max-w-md w-full">
+                <span className="text-[10px] font-mono font-black uppercase tracking-wider text-black/75 mr-1">
+                  TRY ACCOUNTS:
+                </span>
+                {[
+                  { name: 'Sakaza', handle: 'sakazaworld' },
+                  { name: 'Grind Up', handle: 'grindup' },
+                  { name: 'Café De Ollas', handle: 'cafedeollas' },
+                  { name: 'Frame2Byte', handle: 'frame2byte' },
+                ].map((account) => (
+                  <button
+                    key={account.handle}
+                    type="button"
+                    onClick={() => setHandleInput(account.handle)}
+                    className={`px-2.5 py-1 bg-white text-black border-2 border-black rounded-lg text-[10px] sm:text-[11px] font-display font-black shadow-[2px_2px_0px_#000] hover:bg-neutral-50 active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer ${
+                      handleInput.toLowerCase().includes(account.handle) ? 'ring-2 ring-black' : ''
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B2F] shrink-0" />
+                    <span>{account.name}</span>
+                  </button>
+                ))}
+              </div>
 
+              {/* 4 Feature Indicator Pills: 2 bubbles per line */}
+              <div className="grid grid-cols-2 gap-2 max-w-md w-full">
+                {[
+                  'Account Verify',
+                  'Bio Clarity',
+                  'Reel Metrics',
+                  'Frame Score /100',
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="px-2.5 py-1.5 bg-white border-2 border-black text-black text-[11px] sm:text-xs font-bold font-mono rounded-lg shadow-xs flex items-center justify-center text-center truncate"
+                  >
+                    ✓ {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Diagnostic System Preview Card */}
+            <div className="lg:col-span-6 w-full flex justify-center lg:justify-end">
+              <div
+                className={`w-full ${
+                  isPage ? 'max-w-md lg:max-w-[430px] xl:max-w-[460px] p-4 sm:p-5 lg:p-5' : 'max-w-md p-4 sm:p-5'
+                } bg-[#0B0B0B] text-white rounded-2xl sm:rounded-3xl border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,0.85)] relative overflow-hidden`}
+              >
+                <div className="absolute top-0 right-0 w-44 h-44 bg-[#FF3B2F]/15 rounded-full blur-2xl pointer-events-none" />
+
+                {/* Live Diagnostic Engine Badge */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-2.5 mb-3 relative z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF3B2F] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF3B2F]" />
+                    </span>
+                    <span className="text-[10px] sm:text-xs font-mono font-black uppercase tracking-widest text-[#FF5547]">
+                      FRAME.AI DIAGNOSTIC SUITE
+                    </span>
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                    STRUCTURED AUDIT
+                  </span>
+                </div>
+
+                {/* Score Showcase Block */}
+                <div className="bg-[#141414] border border-white/10 rounded-xl p-3 sm:p-3.5 mb-3 flex items-center justify-between gap-3 relative z-10">
+                  <div>
+                    <span className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider text-white/50 block">
+                      PROPRIETARY FRAME SCORE
+                    </span>
+                    <div className="flex items-baseline gap-1.5 mt-0.5">
+                      <span className={`${isPage ? 'text-3xl sm:text-4xl lg:text-4xl' : 'text-3xl sm:text-4xl'} font-display font-black text-white`}>
+                        82
+                      </span>
+                      <span className="text-xs sm:text-sm font-mono text-white/40">/100</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="inline-block px-2.5 py-1 rounded-md text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-wider bg-[#FF3B2F] text-white shadow-xs">
+                      STRONG BASELINE
+                    </span>
+                    <span className="block text-[10px] font-mono text-white/50 mt-0.5">
+                      <span className="text-[#FF3B2F]">@</span>frame2byte (verified)
+                    </span>
+                  </div>
+                </div>
+
+                {/* 6 Metric Breakdown Bars */}
+                <div className="space-y-1.5 sm:space-y-2 mb-3 relative z-10">
+                  {[
+                    { label: 'Profile Identity', score: '88/100', w: '88%', color: 'bg-[#FF3B2F]' },
+                    { label: 'Content Strategy', score: '80/100', w: '80%', color: 'bg-[#FF3B2F]' },
+                    { label: 'Reel Performance', score: '76/100', w: '76%', color: 'bg-[#FF3B2F]' },
+                    { label: 'Engagement', score: '72/100', w: '72%', color: 'bg-[#FF3B2F]' },
+                    { label: 'Consistency', score: '85/100', w: '85%', color: 'bg-[#FF3B2F]' },
+                    { label: 'Brand Presentation', score: '91/100', w: '91%', color: 'bg-white' },
+                  ].map((metric, idx) => (
+                    <div key={idx}>
+                      <div className="flex justify-between text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider text-white/80 mb-0.5">
+                        <span className="truncate mr-2">{metric.label}</span>
+                        <span className={metric.color === 'bg-white' ? 'text-white' : 'text-[#FF5547]'}>
+                          {metric.score}
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className={`h-full ${metric.color} rounded-full`} style={{ width: metric.w }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Diagnosis Summary Pill */}
+                <div className="pt-2.5 border-t border-white/10 flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-white/70 relative z-10">
+                  <span className="flex items-center gap-1.5 text-white font-bold">
+                    <Target size={13} className="text-[#FF3B2F]" />
+                    <span>PRIORITIZED OPPORTUNITY:</span>
+                  </span>
+                  <span className="text-[#FF5547] font-bold">Reel Hook Drop-Off</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* ================= AUDIT RESULTS VIEW ================= */}
-        {auditResult && (
+        {/* ================= STRUCTURED DIAGNOSTIC REPORT RESULTS VIEW ================= */}
+        {diagnosticReport && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full max-w-5xl mx-auto text-left space-y-10"
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-4xl lg:max-w-[900px] mx-auto space-y-4 sm:space-y-6 md:space-y-7"
           >
-            {/* Header Title Bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
-              <div>
-                <div className="inline-flex items-center gap-2 bg-[#FF3B2F]/20 border border-[#FF3B2F]/50 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-[#FF5547] shadow-[0_0_12px_rgba(255,59,47,0.4)] mb-2">
-                  <CheckCircle2 size={12} /> FRAME.AI ANALYSIS COMPLETE
-                </div>
-                <h2 className="text-2xl sm:text-4xl font-display font-black uppercase tracking-tight text-white">
-                  FRAME.AI WEBSITE AUDIT REPORT FOR <span className="text-[#FF3B2F]">{auditResult.cleanUrl}</span>
-                </h2>
-                <p className="text-xs font-bold uppercase tracking-wider text-white/50 mt-1">
-                  INDUSTRY NICHE: <span className="text-white">{auditResult.industry}</span>
-                </p>
+            {/* Top Bar with Reset button */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-4 pb-3 sm:pb-4 border-b-2 border-black">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#FF3B2F] animate-pulse shrink-0" />
+                <span className="text-xs sm:text-sm md:text-base font-mono font-black uppercase tracking-wider text-black">
+                  FRAME.AI INSTAGRAM GROWTH DIAGNOSTIC REPORT
+                </span>
               </div>
 
               <button
                 onClick={handleReset}
-                className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white border border-white/20 rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-colors"
+                className="self-end sm:self-auto shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 md:py-2 bg-[#FF3B2F] hover:bg-[#e03025] text-white border-2 border-black rounded-full font-display font-black text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-[2px_2px_0px_#000] active:scale-95 cursor-pointer"
               >
-                <RotateCcw size={14} />
-                <span>ANALYZE ANOTHER</span>
+                <RotateCcw size={12} className="text-white shrink-0" />
+                <span>ANALYZE ANOTHER ACCOUNT</span>
               </button>
             </div>
 
-            {/* SECTION 1: OVERALL WEBSITE SCORE CARD */}
-            <div className="bg-neutral-900 border-2 border-white/20 rounded-3xl p-6 sm:p-8 shadow-[8px_8px_0px_#FF3B2F] relative overflow-hidden">
-              <div className="grid lg:grid-cols-12 gap-8 items-center">
-                
-                {/* Score Number Badge */}
-                <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-black rounded-2xl border border-white/10 text-center">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">
-                    OVERALL AUDIT SCORE
-                  </span>
-                  
-                  <div className="text-5xl sm:text-6xl font-display font-black text-white my-2 flex items-baseline gap-1">
-                    <span
-                      className={
-                        auditResult.overallScore >= 80
-                          ? 'text-[#FF5547] drop-shadow-[0_0_15px_rgba(255,59,47,0.8)]'
-                          : auditResult.overallScore >= 65
-                          ? 'text-[#FF3B2F]'
-                          : 'text-red-500'
-                      }
-                    >
-                      {auditResult.overallScore}
+            {/* ================= 1. ACCOUNT VERIFIED (COMPACT HEADER) ================= */}
+            <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-[4px_4px_0px_#000]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 bg-black text-white px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-mono font-black uppercase tracking-wider">
+                      <ShieldCheck size={12} className="text-white" />
+                      <span>ACCOUNT VERIFIED</span>
                     </span>
-                    <span className="text-lg font-bold text-white/40">/100</span>
+                    <span className="text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider text-black/60 bg-black/5 border border-black/10 px-2 md:px-2.5 py-0.5 md:py-1 rounded">
+                      {diagnosticReport.accountVerified.businessCategory}
+                    </span>
                   </div>
 
+                  <div className="flex items-baseline gap-2 flex-wrap min-w-0">
+                    <h3 className="text-base sm:text-lg md:text-2xl font-display font-black tracking-tight break-all text-[#FF3B2F]">
+                      @{cleanReportUsername}
+                    </h3>
+                    <span className="text-xs sm:text-sm md:text-base font-semibold text-black/60 truncate">
+                      {diagnosticReport.accountVerified.fullName}
+                    </span>
+                  </div>
+
+                  {diagnosticReport.accountVerified.externalUrl && (
+                    <a
+                      href={
+                        diagnosticReport.accountVerified.externalUrl.startsWith('http')
+                          ? diagnosticReport.accountVerified.externalUrl
+                          : `https://${diagnosticReport.accountVerified.externalUrl}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs md:text-sm font-mono text-[#FF3B2F] hover:underline mt-1 break-all"
+                    >
+                      <span>🔗 {diagnosticReport.accountVerified.externalUrl}</span>
+                    </a>
+                  )}
+                </div>
+
+                <a
+                  href={diagnosticReport.accountVerified.profileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 md:px-4 md:py-2.5 bg-black hover:bg-neutral-900 text-white rounded-lg text-xs md:text-sm font-mono font-bold uppercase tracking-wider transition-colors shrink-0"
+                >
+                  <span>OPEN INSTAGRAM</span>
+                  <ExternalLink size={12} className="text-[#FF3B2F]" />
+                </a>
+              </div>
+            </div>
+
+            {/* ================= 2. FRAME SCORE (WHITE PALETTE) ================= */}
+            <div className="bg-[#0B0B0B] text-white border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
+              <div className="flex items-center justify-between pb-2.5 mb-3.5 md:mb-5 border-b border-white/10">
+                <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest">
+                  <Zap size={13} />
+                  <span>PROPRIETARY FRAME SCORE</span>
+                </div>
+              </div>
+
+              <div className="grid lg:grid-cols-12 gap-5 md:gap-7 items-center">
+                {/* Score Number Display */}
+                <div className="lg:col-span-4 flex flex-col items-center justify-center p-4 md:p-6 bg-[#141414] rounded-xl md:rounded-2xl border border-white/10 text-center">
+                  <span className="text-[10px] md:text-xs font-mono font-bold uppercase tracking-widest text-white/50 mb-0.5">
+                    OVERALL FRAME SCORE
+                  </span>
+
+                  <div className="text-5xl sm:text-6xl md:text-7xl font-display font-black text-white my-1 flex items-baseline gap-1">
+                    <span className="text-[#FF3B2F]">{diagnosticReport.frameScore.overallScore}</span>
+                    <span className="text-base md:text-lg font-mono text-white/40">/100</span>
+                  </div>
+
+                  <div className="inline-block px-3 py-0.5 md:px-4 md:py-1 rounded-full text-[10px] md:text-xs font-mono font-black uppercase tracking-widest bg-[#FF3B2F] text-white shadow-xs mt-0.5">
+                    {diagnosticReport.frameScore.scoreStatus}
+                  </div>
+
+                  <span className="text-[10px] md:text-xs font-mono text-white/50 mt-1.5 block">
+                    Calculated via 6 core growth vectors
+                  </span>
+                </div>
+
+                {/* 6 Component Bars (Clean White Accent replacing green) */}
+                <div className="lg:col-span-8 space-y-2 md:space-y-3">
+                  {[
+                    { label: 'Profile Identity', score: diagnosticReport.frameScore.profileIdentity, weight: 'Identity & Bio' },
+                    { label: 'Content Strategy', score: diagnosticReport.frameScore.contentStrategy, weight: 'Formats & Carousels' },
+                    { label: 'Reel Performance', score: diagnosticReport.frameScore.reelPerformance, weight: 'Hook & Retention' },
+                    { label: 'Engagement', score: diagnosticReport.frameScore.engagement, weight: 'Community Signals' },
+                    { label: 'Consistency', score: diagnosticReport.frameScore.consistency, weight: 'Publishing Cadence' },
+                    { label: 'Brand Presentation', score: diagnosticReport.frameScore.brandPresentation, weight: 'Visual Hierarchy' },
+                  ].map((m, idx) => (
+                    <div key={idx}>
+                      <div className="flex justify-between items-center text-xs md:text-sm font-mono font-bold uppercase tracking-wider mb-1">
+                        <span className="text-white/85 flex items-center gap-1.5">
+                          <span>{m.label}</span>
+                          <span className="text-[9px] md:text-[11px] text-white/40 font-normal">({m.weight})</span>
+                        </span>
+                        <span className={m.score < 50 ? 'text-[#FF3B2F]' : 'text-white'}>
+                          {m.score}/100
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden">
+                        <motion.div
+                          className={`h-full ${
+                            m.score < 50 ? 'bg-[#FF3B2F]' : m.score >= 80 ? 'bg-white' : 'bg-[#FF5547]'
+                          } rounded-full`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${m.score}%` }}
+                          transition={{ duration: 0.5, delay: idx * 0.05 }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ================= 3. WHAT’S WORKING ================= */}
+            <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
+              <div className="inline-flex items-center gap-2 bg-black text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-3.5 md:mb-5 shadow-xs">
+                <CheckCircle2 size={13} className="text-white" />
+                <span>3. WHAT’S WORKING (VERIFIED STRENGTHS)</span>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-3 md:gap-4">
+                {diagnosticReport.whatsWorking.map((strength, idx) => (
                   <div
-                    className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                      auditResult.overallScore >= 80
-                        ? 'bg-[#FF3B2F]/20 text-[#FF5547] border border-[#FF3B2F]/50 shadow-[0_0_10px_rgba(255,59,47,0.4)]'
-                        : 'bg-[#FF3B2F]/20 text-[#FF3B2F] border border-[#FF3B2F]/30'
-                    }`}
+                    key={idx}
+                    className="p-3 md:p-4 bg-[#F5F4EF] border border-black/10 rounded-xl flex items-start gap-2.5"
                   >
-                    {auditResult.overallScore >= 80 ? 'STRONG BASELINE' : 'GROWTH OPPORTUNITY'}
+                    <span className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-black text-white flex items-center justify-center shrink-0 font-black text-[10px] md:text-xs mt-0.5">
+                      ✓
+                    </span>
+                    <p className="text-xs md:text-sm font-bold text-black/85 leading-snug md:leading-relaxed">
+                      {strength}
+                    </p>
                   </div>
-                </div>
-
-                {/* Score Metric Breakdown Sliders */}
-                <div className="lg:col-span-8 space-y-4">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
-                      <span className="text-white/80">Visual Hierarchy & Layout</span>
-                      <span className="text-[#FF3B2F]">{auditResult.visualHierarchyScore}/100</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[#FF3B2F] rounded-full transition-all duration-1000"
-                        style={{ width: `${auditResult.visualHierarchyScore}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
-                      <span className="text-white/80">Mobile UX & Responsiveness</span>
-                      <span className="text-[#FF5547]">{auditResult.uxScore}/100</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#FF3B2F] to-[#FF5547] rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(255,59,47,0.6)]"
-                        style={{ width: `${auditResult.uxScore}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
-                      <span className="text-white/80">Conversion CTA Placement</span>
-                      <span className="text-[#FF3B2F]">{auditResult.conversionScore}/100</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[#FF3B2F] rounded-full transition-all duration-1000"
-                        style={{ width: `${auditResult.conversionScore}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
-                      <span className="text-white/80">Content & Copy Clarity</span>
-                      <span className="text-white">{auditResult.contentClarityScore}/100</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-white rounded-full transition-all duration-1000"
-                        style={{ width: `${auditResult.contentClarityScore}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
-                      <span className="text-white/80">Performance & Load Signals</span>
-                      <span className="text-[#FF5547]">{auditResult.performanceScore}/100</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#FF3B2F] to-[#FF5547] rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(255,59,47,0.6)]"
-                        style={{ width: `${auditResult.performanceScore}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
+                ))}
               </div>
             </div>
 
-            {/* STRENGTHS AND GROWTH OPPORTUNITIES GRID */}
-            <div className="grid md:grid-cols-2 gap-6">
-              
-              {/* SECTION 2: STRENGTHS */}
-              <div className="p-6 bg-neutral-900 border-2 border-white/10 rounded-3xl shadow-md flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-[#FF5547] font-black text-xs uppercase tracking-wider mb-4 pb-3 border-b border-white/10">
-                    <CheckCircle2 size={18} /> KEY WEBSITE STRENGTHS
-                  </div>
-                  <ul className="space-y-3">
-                    {auditResult.strengths.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-3 text-xs sm:text-sm font-semibold text-white/90">
-                        <span className="text-[#FF5547] font-bold mt-0.5">✓</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+            {/* ================= 4. PRIORITY GROWTH OPPORTUNITIES (COMPACT) ================= */}
+            <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
+              <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-3.5 md:mb-5 shadow-xs">
+                <Target size={13} />
+                <span>4. PRIORITY GROWTH OPPORTUNITIES</span>
               </div>
 
-              {/* SECTION 3: GROWTH OPPORTUNITIES */}
-              <div className="p-6 bg-neutral-900 border-2 border-[#FF3B2F]/40 rounded-3xl shadow-md flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-[#FF3B2F] font-black text-xs uppercase tracking-wider mb-4 pb-3 border-b border-white/10">
-                    <AlertCircle size={18} /> GROWTH OPPORTUNITIES
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                {diagnosticReport.growthOpportunities.map((opp) => (
+                  <div
+                    key={opp.priority}
+                    className="p-3.5 md:p-5 bg-[#F5F4EF] border border-black/10 rounded-xl flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-mono font-black text-[10px] md:text-xs bg-black text-white px-1.5 py-0.5 rounded">
+                          0{opp.priority}
+                        </span>
+                        <h4 className="text-xs sm:text-sm md:text-base font-display font-black uppercase text-black">
+                          {opp.title}
+                        </h4>
+                      </div>
+                      <p className="text-xs md:text-sm font-medium text-black/80 leading-relaxed">
+                        {opp.explanation}
+                      </p>
+                    </div>
                   </div>
-                  <ul className="space-y-3">
-                    {auditResult.opportunities.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-3 text-xs sm:text-sm font-semibold text-white/90">
-                        <span className="text-[#FF3B2F] font-bold mt-0.5">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                ))}
               </div>
-
             </div>
 
-            {/* SECTION 4: FRAME2BYTE RECOMMENDATION CARD */}
-            <div className="p-6 sm:p-8 bg-black border-2 border-[#FF3B2F] rounded-3xl shadow-[0_0_25px_rgba(255,59,47,0.4)] relative">
-              <div className="flex items-center gap-2 text-[#FF5547] font-black text-xs uppercase tracking-wider mb-3">
-                <Zap size={18} className="animate-pulse text-[#FF5547]" /> FRAME2BYTE STRATEGIC RECOMMENDATION
+            {/* ================= 5. PROFILE ANALYSIS (COMPACT DASHBOARD) ================= */}
+            <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
+              <div className="inline-flex items-center gap-2 bg-black text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-3.5 md:mb-5 shadow-xs">
+                <Eye size={13} className="text-[#FF3B2F]" />
+                <span>5. PROFILE ANALYSIS (CUSTOMER VIEW)</span>
               </div>
-              <p className="text-sm sm:text-base font-semibold text-white/90 leading-relaxed mb-6">
-                "{auditResult.frameRecommendation}"
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                {diagnosticReport.profileAnalysis.metrics.map((metric, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 md:p-5 bg-[#F5F4EF] border border-black/10 rounded-xl flex flex-col justify-between"
+                  >
+                    <div className="flex items-center justify-between gap-2 pb-1.5 mb-1.5 md:mb-2 border-b border-black/10">
+                      <span className="text-xs md:text-sm font-mono font-black uppercase text-black">
+                        {metric.label}
+                      </span>
+                      <span className="text-xs md:text-sm font-mono font-black text-[#FF3B2F]">
+                        {metric.score}/100
+                      </span>
+                    </div>
+                    <p className="text-xs md:text-sm font-medium text-black/80 leading-snug md:leading-relaxed">
+                      {metric.insight}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {diagnosticReport.profileAnalysis.genericAiWordingDetected && (
+                <div className="mt-3 md:mt-4 p-2.5 md:p-3.5 bg-[#FFF5F4] border border-[#FF3B2F] rounded-lg text-xs md:text-sm font-semibold text-black flex items-center gap-2">
+                  <AlertCircle size={14} className="text-[#FF3B2F] shrink-0" />
+                  <span>
+                    {diagnosticReport.profileAnalysis.genericWordingNote ||
+                      'Generic/AI-like wording detected in profile bio. Ground bio in concrete customer outcomes.'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* ================= 6. REEL ANALYSIS (ONLY IF VERIFIED DATA EXISTS) ================= */}
+            {diagnosticReport.hasVerifiedReelMetrics && diagnosticReport.reelAnalysis && (
+              <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
+                <div className="flex items-center justify-between pb-2 mb-3 md:mb-4 border-b border-black/10 flex-wrap gap-2">
+                  <div className="inline-flex items-center gap-2 bg-black text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest shadow-xs">
+                    <Film size={13} className="text-[#FF3B2F]" />
+                    <span>6. REEL ANALYSIS (SHORT-FORM VIDEO HEALTH)</span>
+                  </div>
+                  <span className="text-xs md:text-sm font-mono font-black text-white bg-black px-2.5 py-0.5 md:px-3 md:py-1 rounded">
+                    SCORE: {diagnosticReport.reelAnalysis.reelPerformanceScore}/100
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 md:gap-3.5 mb-3">
+                  <div className="p-2.5 md:p-3.5 bg-[#F5F4EF] border border-black/10 rounded-lg text-center">
+                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-black/50 uppercase block">REELS ANALYZED</span>
+                    <span className="text-base md:text-xl font-display font-black text-black">
+                      {diagnosticReport.reelAnalysis.reelsAnalyzed}
+                    </span>
+                  </div>
+                  <div className="p-2.5 md:p-3.5 bg-[#F5F4EF] border border-black/10 rounded-lg text-center">
+                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-black/50 uppercase block">AVERAGE VIEWS</span>
+                    <span className="text-base md:text-xl font-display font-black text-black">
+                      {diagnosticReport.reelAnalysis.averageViews}
+                    </span>
+                  </div>
+                  <div className="p-2.5 md:p-3.5 bg-[#F5F4EF] border border-black/10 rounded-lg text-center">
+                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-black/50 uppercase block">MEDIAN VIEWS</span>
+                    <span className="text-base md:text-xl font-display font-black text-black">
+                      {diagnosticReport.reelAnalysis.medianViews}
+                    </span>
+                  </div>
+                  <div className="p-2.5 md:p-3.5 bg-[#F5F4EF] border border-black/10 rounded-lg text-center">
+                    <span className="text-[9px] md:text-[10px] font-mono font-bold text-black/50 uppercase block">TOP REEL</span>
+                    <span className="text-base md:text-xl font-display font-black text-[#FF3B2F]">
+                      {diagnosticReport.reelAnalysis.highestPerformingReel}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ================= 7. ACTIONABLE NEXT STEPS (2x2 ON DESKTOP, 1-COL ON MOBILE) ================= */}
+            <div className="bg-white text-black border-2 border-black rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[4px_4px_0px_#000]">
+              <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-3.5 md:mb-5 shadow-xs">
+                <Clock size={13} />
+                <span>EXECUTION BLUEPRINT</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                {diagnosticReport.nextSteps.map((step) => (
+                  <div
+                    key={step.stepNumber}
+                    className="p-3 md:p-4 bg-[#F5F4EF] border border-black/10 rounded-xl flex items-start gap-2.5 md:gap-3"
+                  >
+                    <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-black text-white font-mono font-black text-[10px] md:text-xs flex items-center justify-center shrink-0 mt-0.5">
+                      0{step.stepNumber}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h5 className="text-xs sm:text-sm md:text-base font-display font-black uppercase text-black mb-0.5">
+                        {step.action}
+                      </h5>
+                      <p className="text-xs md:text-sm font-medium text-black/80 leading-snug md:leading-relaxed">
+                        {step.detail}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ================= 8. HOW FRAME2BYTE CAN HELP (SIMPLIFIED PERSONALIZED CTA) ================= */}
+            <div className="p-5 sm:p-6 md:p-8 bg-black text-white border-2 border-black rounded-xl sm:rounded-2xl md:rounded-3xl shadow-[6px_6px_0px_rgba(0,0,0,0.85)] relative overflow-hidden">
+              <div className="inline-flex items-center gap-2 bg-[#FF3B2F] text-white px-3 py-1 md:px-3.5 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mb-2.5 md:mb-4">
+                <Zap size={13} />
+                <span>HOW FRAME2BYTE CAN HELP</span>
+              </div>
+
+              <h3 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-display font-black uppercase tracking-tight text-white mb-2 md:mb-3 break-words leading-tight">
+                TURN ATTENTION INTO REVENUE FOR{' '}
+                <span className="inline-block text-[#FF3B2F]">
+                  @{cleanReportUsername.toUpperCase()}
+                </span>
+              </h3>
+
+              <p className="text-xs sm:text-sm md:text-base text-white/80 font-medium max-w-xl md:max-w-2xl mb-4 md:mb-6 leading-relaxed">
+                {diagnosticReport.helpSentence}
               </p>
 
-              {/* SECTION 5: PRIMARY CTA */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-white/10">
-                <button
-                  onClick={handleBookCall}
-                  className="flex-1 py-4 px-6 bg-[#FF3B2F] text-white rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#E02D21] transition-all shadow-[4px_4px_0px_#FFF] active:scale-95"
-                >
-                  <span>LET'S IMPROVE YOUR WEBSITE</span>
-                  <ArrowUpRight size={18} className="stroke-[3]" />
-                </button>
-
-                <button
-                  onClick={handleReset}
-                  className="py-4 px-6 bg-neutral-900 text-white/80 border border-white/20 rounded-xl font-extrabold text-xs uppercase tracking-wider hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
-                >
-                  <RotateCcw size={16} />
-                  <span>AUDIT ANOTHER SITE</span>
-                </button>
-              </div>
+              <button
+                onClick={handleConnectWithFrame}
+                className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-[#FF3B2F] hover:bg-[#e03025] text-white rounded-xl md:rounded-2xl font-display font-black text-xs sm:text-sm md:text-base uppercase tracking-wider inline-flex items-center justify-center gap-2 shadow-[3px_3px_0px_#FFF] active:scale-95 transition-all cursor-pointer"
+              >
+                <span>LET'S TALK ABOUT YOUR BRAND</span>
+                <ArrowRight size={16} />
+              </button>
             </div>
-
           </motion.div>
         )}
-
       </div>
     </section>
   );

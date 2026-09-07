@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import Hero from '../components/Hero';
 import SocialProof from '../components/SocialProof';
-import Portfolio from '../components/Portfolio';
+import StudioTransition from '../components/StudioTransition';
 import Services from '../components/Services';
+import Portfolio from '../components/Portfolio';
 import AIBusinessAudit from '../components/AIBusinessAudit';
 import Pricing from '../components/Pricing';
 import About from '../components/About';
@@ -18,8 +19,9 @@ export default function Home() {
     >
       <Hero />
       <SocialProof />
-      <Portfolio />
+      <StudioTransition />
       <Services />
+      <Portfolio />
       <AIBusinessAudit />
       <Pricing />
       <About />

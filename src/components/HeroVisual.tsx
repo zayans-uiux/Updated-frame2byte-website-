@@ -58,7 +58,7 @@ export default function HeroVisual({ isMobile = false }: { isMobile?: boolean })
             SCROLL STOPPER
           </div>
           <div className="bg-[#FF3B2F] text-white px-3 sm:px-4 py-1 font-display font-black text-xs sm:text-sm tracking-widest uppercase border-2 border-black shadow-[0_0_15px_rgba(255,59,47,0.5)] transform rotate-2 mt-1">
-            CREATIVE AI ⚡
+            CREATIVE AI
           </div>
         </motion.div>
 

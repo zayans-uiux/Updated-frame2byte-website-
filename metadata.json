@@ -1,5 +1,6 @@
 {
   "name": "Frame2Byte",
-  "description": "Frame2Byte | AI Marketing & Creative Studio",
-  "requestFramePermissions": []
+  "description": "Frame2Byte | We Turn Content Into Attention — Business Marketing & Creator Clipping",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

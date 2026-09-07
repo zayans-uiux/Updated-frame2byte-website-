@@ -1,15 +1,19 @@
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { CurrencyProvider } from './context/CurrencyContext';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import CustomCursor from './components/CustomCursor';
+import VideoPreloader from './components/VideoPreloader';
 import Home from './pages/Home';
 import PortfolioPage from './pages/PortfolioPage';
 import ContactPage from './pages/ContactPage';
 import ServicesPage from './pages/ServicesPage';
 import PlansPage from './pages/PlansPage';
+import ClippingPage from './pages/ClippingPage';
+import FrameAiPage from './pages/FrameAiPage';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
   constructor(props: { children: ReactNode }) {
@@ -53,25 +57,31 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 export default function App() {
   return (
     <ErrorBoundary>
-      <Router>
-        <ScrollToTop />
-        <CustomCursor />
-        <div className="min-h-screen bg-[#0B0B0B] text-white selection:bg-[#FF6A00]/30">
-          <Navbar />
-          <main className="relative z-10">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/portfolio" element={<PortfolioPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/services" element={<ServicesPage />} />
-              <Route path="/plans" element={<PlansPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <BottomNav />
-          <Footer />
-        </div>
-      </Router>
+      <CurrencyProvider>
+        <VideoPreloader />
+        <Router>
+          <ScrollToTop />
+          <CustomCursor />
+          <div className="min-h-screen bg-[#0B0B0B] text-white selection:bg-[#FF6A00]/30">
+            <Navbar />
+            <main className="relative z-10">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/portfolio" element={<PortfolioPage />} />
+                <Route path="/works" element={<PortfolioPage />} />
+                <Route path="/clipping" element={<ClippingPage />} />
+                <Route path="/frameai" element={<FrameAiPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/plans" element={<PlansPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+            <BottomNav />
+            <Footer />
+          </div>
+        </Router>
+      </CurrencyProvider>
     </ErrorBoundary>
   );
 }

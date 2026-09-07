@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ArrowUpRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import GraphicDesignShowcase from '../components/GraphicDesignShowcase';
 import ReelShowcase from '../components/ReelShowcase';
 
@@ -92,61 +93,56 @@ export default function PortfolioPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-24 sm:pt-32 pb-16 sm:pb-24 min-h-screen bg-white text-black overflow-x-hidden"
+      className="pt-24 sm:pt-28 lg:pt-32 pb-14 sm:pb-20 min-h-screen bg-white text-black overflow-x-hidden"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <div className="text-center mb-12 sm:mb-20">
-          <div className="inline-block bg-black text-white px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase mb-4 shadow-sm">
-            PORTFOLIO SHOWCASE
-          </div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl sm:text-6xl md:text-7xl font-display font-black tracking-tight uppercase leading-[0.95] text-black break-words"
-          >
-            OUR CREATIVE <br />
-            <span className="text-[#FF3B2F] text-[0.85em] inline-block tracking-tight">PORTFOLIO.</span>
-          </motion.h1>
-          <p className="text-black/70 text-xs sm:text-sm md:text-base max-w-xl mx-auto uppercase tracking-widest font-black mt-4">
-            AI-POWERED BRANDING, HIGH-RETENTION SHORT-FORM CONTENT, AND CREATIVE DIRECTION.
-          </p>
-        </div>
-
-        {/* Section 1: Short-Form Reel Edits */}
-        <section className="mb-16 sm:mb-24">
-          <div className="flex items-center gap-3 mb-8 pb-3 border-b-2 border-black">
-            <span className="w-3 h-3 bg-[#FF3B2F] rounded-full" />
-            <h2 className="text-xl sm:text-3xl font-display font-black uppercase tracking-tight text-black">
-              01 / SHORT-FORM REEL EDITS
-            </h2>
-            <span className="text-xs font-bold text-black/50 uppercase tracking-widest ml-auto hidden sm:inline">
-              [HIGH-RETENTION REELS]
-            </span>
-          </div>
-
+        
+        {/* ================= SECTION 1: REELS N CLIPPING ================= */}
+        <section className="mb-10 sm:mb-14 lg:mb-16">
           <ReelShowcase
             reels={reelVideos}
             onOpenModal={(video) => openModal({ ...video, type: 'video' })}
+            title={
+              <>
+                REELS N <br />
+                <span className="text-[#FF3B2F]">CLIPPING.</span>
+              </>
+            }
+            subtitle={
+              <>
+                AI-POWERED BRANDING, <span className="text-[#FF3B2F]">HIGH-RETENTION</span> SHORT-FORM CONTENT, AND FULL-SCALE CREATIVE DIRECTION FOR HIGH-GROWTH BRANDS.
+              </>
+            }
+            categoryNumber="01"
+            categoryTitle="SHORT-FORM REEL EDITS"
+            categoryTag="[HIGH-RETENTION REELS]"
           />
         </section>
 
-        {/* Section 2: Graphic Designs Editorial Showcase */}
-        <section className="mb-16 sm:mb-24">
-          <div className="flex items-center gap-3 mb-8 pb-3 border-b-2 border-black">
-            <span className="w-3 h-3 bg-black rounded-full" />
-            <h2 className="text-xl sm:text-3xl font-display font-black uppercase tracking-tight text-black">
-              02 / GRAPHIC DESIGNS & BRANDING SHOWCASE
-            </h2>
-            <span className="text-xs font-bold text-black/50 uppercase tracking-widest ml-auto hidden sm:inline">
-              [FEATURED ARTWORK & CREATIVE DIRECTION]
-            </span>
-          </div>
+        {/* ================= SLIM HORIZONTAL DIVIDER LINE (REFERENCE IMAGE 2) ================= */}
+        <div className="w-full my-8 sm:my-12 lg:my-14 flex items-center justify-center px-2 sm:px-6">
+          <div className="w-full h-px bg-black/15 max-w-6xl mx-auto" />
+        </div>
 
+        {/* ================= SECTION 2: GRAPHIC DESIGN ================= */}
+        <section className="mb-12 sm:mb-16 lg:mb-20">
           <GraphicDesignShowcase
             items={visualDesigns}
             onOpenModal={(item) => openModal({ ...item, type: 'image' })}
-            isWhiteBg={true}
+            title={
+              <>
+                GRAPHIC <br />
+                <span className="text-[#FF3B2F]">DESIGN.</span>
+              </>
+            }
+            subtitle={
+              <>
+                HIGH-IMPACT BRAND ARTWORK, SOCIAL CREATIVES, AND CAMPAIGN POSTERS CRAFTED FOR VIRAL ATTRACTION.
+              </>
+            }
+            categoryNumber="02"
+            categoryTitle="CURATED ARTWORK"
+            categoryTag="[PINS]"
           />
         </section>
 
@@ -167,13 +163,13 @@ export default function PortfolioPage() {
             Join forward-thinking businesses and creators scaling their organic reach with Frame2Byte's high-retention content engine.
           </p>
           <div className="flex justify-center">
-            <a 
-              href="/#ai-audit"
+            <Link 
+              to="/frameai"
               className="px-8 py-4 bg-[#FF3B2F] text-white rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-[#E02D21] transition-transform hover:scale-105 shadow-[4px_4px_0px_#FFF] border border-white"
             >
-              <span>GET FREE AI MARKETING AUDIT</span>
+              <span>GET INSTAGRAM HEALTH AUDIT</span>
               <ArrowUpRight size={18} className="stroke-[3]" />
-            </a>
+            </Link>
           </div>
         </motion.div>
       </div>
@@ -182,11 +178,16 @@ export default function PortfolioPage() {
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         {selectedMedia?.type === 'video' ? (
           <video
-            src={selectedMedia.src}
             controls
             autoPlay
-            className="max-w-full max-h-[80vh] rounded-xl object-contain shadow-2xl"
-          />
+            playsInline
+            {...({ 'webkit-playsinline': 'true' } as Record<string, string>)}
+            preload="auto"
+            className="max-w-full max-h-[80vh] rounded-xl object-contain shadow-2xl bg-black"
+          >
+            <source src={selectedMedia.src} type="video/mp4; codecs=avc1.42E01E, mp4a.40.2" />
+            <source src={selectedMedia.src} type="video/mp4" />
+          </video>
         ) : selectedMedia?.type === 'image' ? (
           <img
             src={selectedMedia.src}

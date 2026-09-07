@@ -1,11 +1,14 @@
 import { motion } from 'framer-motion';
 import { Video, Instagram, Sparkles, Layout, PlayCircle, Check, ArrowUpRight, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import CurrencyToggle from '../components/CurrencyToggle';
+import AnimatedPrice from '../components/AnimatedPrice';
 
 const individualServices = [
   {
     title: 'Startup Landing Page',
-    price: '₹2,499',
+    priceINR: '₹2,499',
+    priceUSD: '$39',
     unit: 'one-time design',
     icon: <Globe size={24} />,
     desc: 'A modern one-page website designed for startups, personal brands, and small businesses that need a professional online presence without investing in a full website.',
@@ -22,58 +25,63 @@ const individualServices = [
     highlight: true,
     badge: 'RECOMMENDED FOR STARTUPS',
     ctaText: 'Get Your Landing Page',
-    cardBg: 'bg-[#FF3B2F] text-white',
-    buttonBg: 'bg-black text-white hover:bg-neutral-900'
+    cardBg: 'bg-[#0B0B0B] text-white',
+    buttonBg: 'bg-[#FF3B2F] text-white hover:bg-[#E02D21]'
   },
   {
     title: 'Reel Editing',
-    price: '₹600',
+    priceINR: '₹1,400',
+    priceUSD: '$19',
     unit: 'starting price',
     icon: <Video size={24} />,
     desc: 'High-retention video editing designed for maximum virality and viewer retention.',
     points: ['Subtitles & Captions', 'Motion Graphics / VFX', 'Sound FX & Matching Tracks', 'Cinematic Color Grading', 'Hook Optimization', 'Custom Templates'],
-    cardBg: 'bg-[#F5F4EF] text-black',
-    buttonBg: 'bg-black text-white hover:bg-[#FF3B2F]'
+    cardBg: 'bg-white text-black',
+    buttonBg: 'bg-black text-white hover:bg-neutral-800'
   },
   {
     title: 'Graphic Design',
-    price: '₹500',
+    priceINR: '₹1,000',
+    priceUSD: '$16',
     unit: 'starting price',
     icon: <Instagram size={24} />,
     desc: 'Bespoke design creatives crafted to match and elevate your social visual style.',
     points: ['Branded Visuals', 'Single Post Creatives', 'Grid Design Consistency', 'High-Res Deliverables', 'Commercial Use License'],
-    cardBg: 'bg-[#F5F4EF] text-black',
-    buttonBg: 'bg-black text-white hover:bg-[#FF3B2F]'
+    cardBg: 'bg-white text-black',
+    buttonBg: 'bg-black text-white hover:bg-neutral-800'
   },
   {
-    title: 'AI Poster Design',
-    price: '₹1,200',
+    title: 'AI Graphic Posters',
+    priceINR: '₹800',
+    priceUSD: '$12',
     unit: 'starting price',
     icon: <Sparkles size={24} />,
     desc: 'Cutting-edge AI-synthesized graphics and posters tailored for your campaigns.',
     points: ['AI Concept Synthesis', 'Custom Composites', 'Upscaled High Definition', 'Creative Brand Themes', 'Fast Turnaround'],
-    cardBg: 'bg-[#F5F4EF] text-black',
-    buttonBg: 'bg-black text-white hover:bg-[#FF3B2F]'
+    cardBg: 'bg-white text-black',
+    buttonBg: 'bg-black text-white hover:bg-neutral-800'
   },
   {
     title: 'Branding Assets',
-    price: '₹2,500',
+    priceINR: '₹3,999',
+    priceUSD: '$49',
     unit: 'starting price',
     icon: <Layout size={24} />,
     desc: 'Platform-optimized assets packs to scale your identity across the web consistency.',
     points: ['Brand Banner Graphics', 'Intro / Outro Elements', 'Video Frame Overlays', 'Optimized Profile Layouts', 'Brand Color Presets'],
-    cardBg: 'bg-[#F5F4EF] text-black',
-    buttonBg: 'bg-black text-white hover:bg-[#FF3B2F]'
+    cardBg: 'bg-white text-black',
+    buttonBg: 'bg-black text-white hover:bg-neutral-800'
   },
   {
     title: 'Custom Creative Work',
-    price: 'Contact Us',
+    priceINR: 'Contact Us',
+    priceUSD: 'Contact Us',
     unit: 'custom pricing',
     icon: <PlayCircle size={24} />,
     desc: 'Individually scope-tailored premium visual projects, cinematic VFX, or unique campaign launches.',
     points: ['Advanced 3D/VFX Layouts', 'Full Storyboard Mapping', 'Strategic Campaign Assets', 'Priority Studio Delivery', 'Premium Custom Assets'],
-    cardBg: 'bg-[#F5F4EF] text-black',
-    buttonBg: 'bg-black text-white hover:bg-[#FF3B2F]'
+    cardBg: 'bg-white text-black',
+    buttonBg: 'bg-black text-white hover:bg-neutral-800'
   }
 ];
 
@@ -83,18 +91,22 @@ export default function ServicesPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-24 pb-20 min-h-screen bg-[#0B0B0B] text-white"
+      className="pt-20 sm:pt-24 lg:pt-28 pb-16 min-h-screen bg-[#FF3B2F] text-black"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-block bg-[#FF3B2F] text-white px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase mb-4 shadow-sm">
+        {/* Centered Header with Currency Toggle */}
+        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+          <div className="inline-block bg-black text-white px-3 py-1 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase mb-3 shadow-md border border-white/20">
             INDIVIDUAL SERVICES
           </div>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-black tracking-tight uppercase leading-tight whitespace-nowrap">
-            STANDALONE <span className="text-[#FF3B2F]">CREATIVE SOLUTIONS</span>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black tracking-tight uppercase leading-snug break-words max-w-full text-black mb-4">
+            STANDALONE <span className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">CREATIVE SOLUTIONS</span>
           </h1>
+
+          <div className="flex justify-center sm:justify-end">
+            <CurrencyToggle variant="orange" />
+          </div>
         </div>
 
         {/* Services Grid */}
@@ -109,8 +121,8 @@ export default function ServicesPage() {
               className={`relative p-6 sm:p-8 rounded-[2rem] border-2 border-black flex flex-col justify-between shadow-[6px_6px_0px_#0B0B0B] hover:-translate-y-2 transition-transform duration-300 ${service.cardBg}`}
             >
               {service.highlight && service.badge && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-md whitespace-nowrap border border-white/20">
-                  ✨ {service.badge}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FF3B2F] text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-md whitespace-nowrap border border-black">
+                  {service.badge}
                 </div>
               )}
 
@@ -125,9 +137,12 @@ export default function ServicesPage() {
 
                 <div className="flex items-baseline gap-1.5 mb-4">
                   <span className="text-2xl sm:text-4xl font-display font-black">
-                    {service.price}
+                    <AnimatedPrice
+                      inrPrice={service.priceINR}
+                      usdPrice={service.priceUSD}
+                      period={service.unit}
+                    />
                   </span>
-                  <span className="text-xs font-bold opacity-70">{service.unit}</span>
                 </div>
 
                 <p className="text-xs sm:text-sm font-semibold opacity-80 mb-6 leading-relaxed">
@@ -157,16 +172,16 @@ export default function ServicesPage() {
         </div>
 
         {/* Bottom Conversion Banner */}
-        <div className="bg-[#FF3B2F] text-black p-8 sm:p-12 rounded-[2.5rem] text-center max-w-4xl mx-auto border-2 border-black shadow-[8px_8px_0px_#FFF]">
+        <div className="bg-[#0B0B0B] text-white p-8 sm:p-12 rounded-[2.5rem] text-center max-w-4xl mx-auto border-2 border-black shadow-[8px_8px_0px_#000]">
           <h3 className="text-2xl sm:text-4xl font-display font-black uppercase tracking-tight mb-4">
-            NEED CONSISTENT CONTENT <span className="text-white drop-shadow-sm">EVERY MONTH?</span>
+            NEED CONSISTENT CONTENT <span className="text-[#FF3B2F] drop-shadow-sm">EVERY MONTH?</span>
           </h3>
-          <p className="text-xs sm:text-base font-extrabold text-black/80 max-w-xl mx-auto mb-8">
+          <p className="text-xs sm:text-base font-extrabold text-white/70 max-w-xl mx-auto mb-8">
             Our monthly subscription plans are designed for high-growth brands and creators looking for bundled value and dedicated turnarounds.
           </p>
           <Link
             to="/plans"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-black text-white rounded-md font-extrabold text-xs uppercase tracking-wider hover:bg-neutral-900 transition-all shadow-[4px_4px_0px_#000]"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-[#FF3B2F] text-white rounded-md font-extrabold text-xs uppercase tracking-wider hover:bg-[#E02D21] transition-all shadow-[4px_4px_0px_#FFF]"
           >
             <span>VIEW MONTHLY PLANS</span>
             <ArrowUpRight size={16} className="stroke-[3]" />

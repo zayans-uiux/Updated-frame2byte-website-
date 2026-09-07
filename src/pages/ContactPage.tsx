@@ -7,7 +7,7 @@ export default function ContactPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-16 sm:pt-20 min-h-screen bg-[#FF3B2F]"
+      className="pt-16 sm:pt-20 min-h-screen bg-[#FF3B2F] flex flex-col justify-start"
     >
       <CTA />
     </motion.div>

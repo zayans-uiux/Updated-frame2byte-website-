@@ -89,63 +89,73 @@ export default function Portfolio() {
   };
 
   return (
-    <section id="portfolio" className="py-16 sm:py-24 bg-[#F5F4EF] text-black border-b border-black/10 relative overflow-hidden">
+    <section id="portfolio" className="py-14 sm:py-20 bg-[#F5F4EF] text-black border-b border-black/10 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
-        {/* Main Header Block */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-16 gap-6">
-          <div className="text-left">
-            <div className="inline-block bg-black text-white px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase mb-4 shadow-sm">
-              PORTFOLIO SHOWCASE
-            </div>
-            <h2 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-black tracking-tight uppercase leading-[0.98] break-words">
-              REAL WORK. <br />
-              <span className="text-[#FF3B2F]">REAL RESULTS.</span>
-            </h2>
-          </div>
-
-          <Link
-            to="/portfolio"
-            className="self-start md:self-end px-6 py-3.5 bg-black text-white rounded-md font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-[#FF3B2F] transition-colors shadow-[4px_4px_0px_#000]"
-          >
-            <span>EXPLORE FULL PORTFOLIO</span>
-            <ArrowUpRight size={16} className="stroke-[3]" />
-          </Link>
-        </div>
-
-        {/* ================= SECTION 1: FEATURED REELS ================= */}
-        <div className="mb-16 sm:mb-20">
-          <div className="flex items-center gap-3 mb-6 pb-3 border-b-2 border-black">
-            <span className="w-3 h-3 bg-[#FF3B2F] rounded-full" />
-            <h3 className="text-xl sm:text-2xl font-display font-black uppercase tracking-tight text-black">
-              01 / FEATURED VIRAL REELS
-            </h3>
-            <span className="text-xs font-bold text-black/50 uppercase tracking-widest ml-auto hidden sm:inline">
-              [VERTICAL SHORT-FORM CONTENT]
-            </span>
-          </div>
-
+        {/* ================= SECTION 1: REELS N CLIPPING ================= */}
+        <div className="mb-10 sm:mb-14 lg:mb-16">
           <ReelShowcase
             reels={showcaseReels}
             onOpenModal={(item) => openModal({ ...item, type: 'video' })}
+            title={
+              <>
+                REELS N <br />
+                <span className="text-[#FF3B2F]">CLIPPING.</span>
+              </>
+            }
+            subtitle={
+              <>
+                HIGH-RETENTION SHORT-FORM EDITS AND VIRAL CLIPS DESIGNED FOR <span className="text-[#FF3B2F]">RAPID AUDIENCE GROWTH.</span>
+              </>
+            }
+            categoryNumber="01"
+            categoryTitle="SHORT-FORM REEL EDITS"
+            categoryTag="[HIGH-RETENTION REELS]"
+            actionButton={
+              <Link
+                to="/portfolio"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-md font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-[#FF3B2F] transition-colors shadow-[4px_4px_0px_#FF3B2F] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+              >
+                <span>EXPLORE FULL PORTFOLIO</span>
+                <ArrowUpRight size={16} className="stroke-[3]" />
+              </Link>
+            }
           />
         </div>
 
-        {/* ================= SECTION 2: AI & CANVA DESIGNS ================= */}
-        <div>
-          <div className="flex items-center gap-3 mb-8 pb-3 border-b-2 border-black">
-            <span className="w-3 h-3 bg-black rounded-full" />
-            <h3 className="text-xl sm:text-2xl font-display font-black uppercase tracking-tight text-black">
-              02 / GRAPHIC DESIGNS & VISUAL BRANDING
-            </h3>
-            <span className="text-xs font-bold text-black/50 uppercase tracking-widest ml-auto hidden sm:inline">
-              [CURATED CREATIVE SHOWCASE]
-            </span>
-          </div>
+        {/* ================= SLIM HORIZONTAL DIVIDER LINE (REFERENCE IMAGE 2) ================= */}
+        <div className="w-full my-8 sm:my-12 lg:my-14 flex items-center justify-center px-2 sm:px-6">
+          <div className="w-full h-px bg-black/15 max-w-6xl mx-auto" />
+        </div>
 
+        {/* ================= SECTION 2: GRAPHIC DESIGNS & PINS ================= */}
+        <div>
           <GraphicDesignShowcase
             items={showcaseDesigns}
             onOpenModal={(item) => openModal({ ...item, type: 'image' })}
+            title={
+              <>
+                GRAPHIC <br />
+                <span className="text-[#FF3B2F]">DESIGN.</span>
+              </>
+            }
+            subtitle={
+              <>
+                HIGH-IMPACT BRAND ARTWORK, SOCIAL CREATIVES, AND CAMPAIGN POSTERS CRAFTED FOR VIRAL ATTRACTION.
+              </>
+            }
+            categoryNumber="02"
+            categoryTitle="CURATED ARTWORK"
+            categoryTag="[PINS]"
+            actionButton={
+              <Link
+                to="/portfolio"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-md font-black text-xs sm:text-sm uppercase tracking-wider hover:bg-[#FF3B2F] transition-colors shadow-[4px_4px_0px_#FF3B2F] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+              >
+                <span>VIEW ALL PINS</span>
+                <ArrowUpRight size={16} className="stroke-[3]" />
+              </Link>
+            }
             isWhiteBg={false}
           />
         </div>
@@ -156,11 +166,16 @@ export default function Portfolio() {
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         {selectedMedia?.type === 'video' ? (
           <video
-            src={selectedMedia.src}
             controls
             autoPlay
-            className="max-w-full max-h-[80vh] rounded-xl object-contain shadow-2xl"
-          />
+            playsInline
+            {...({ 'webkit-playsinline': 'true' } as Record<string, string>)}
+            preload="auto"
+            className="max-w-full max-h-[80vh] rounded-xl object-contain shadow-2xl bg-black"
+          >
+            <source src={selectedMedia.src} type="video/mp4; codecs=avc1.42E01E, mp4a.40.2" />
+            <source src={selectedMedia.src} type="video/mp4" />
+          </video>
         ) : selectedMedia?.type === 'image' ? (
           <img
             src={selectedMedia.src}

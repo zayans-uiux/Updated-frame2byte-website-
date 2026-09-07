@@ -1,39 +1,89 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Eye, TrendingUp, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Eye, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
 
 export default function MobileHero() {
   return (
-    <div className="w-full h-[100dvh] min-h-[580px] max-h-[820px] bg-[#FF3B2F] text-white flex flex-col justify-between pt-20 pb-16 px-4 overflow-hidden relative border-b-2 border-black select-none">
+    <div className="w-full h-[100dvh] min-h-[580px] max-h-[820px] bg-[#FF3B2F] text-white flex flex-col justify-between pt-14 xs:pt-16 pb-20 xs:pb-24 overflow-hidden relative border-b-2 border-black select-none">
       
       {/* Background Halftone Texture */}
       <div className="absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] [background-size:16px_16px] opacity-15 pointer-events-none" />
 
+      {/* Mobile Frame.AI Micro-Marquee CTA Banner directly below header */}
+      <div 
+        onClick={() => {
+          const el = document.getElementById('ai-audit') || document.getElementById('frame-ai');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            window.location.hash = '#ai-audit';
+          }
+        }}
+        className="w-full overflow-hidden whitespace-nowrap py-1 mb-1 border-y border-black/15 bg-transparent cursor-pointer relative z-20 select-none shrink-0"
+      >
+        <motion.div
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ ease: 'linear', duration: 16, repeat: Infinity }}
+          className="inline-flex items-center gap-4 text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-wider"
+        >
+          {[1, 2, 3, 4, 5, 6].map((idx) => (
+            <div key={idx} className="inline-flex items-center gap-2 shrink-0">
+              <span className="text-black font-extrabold">See what your Instagram is missing</span>
+              <span className="text-black/60">→</span>
+              <span className="inline-flex items-center gap-1 bg-black text-white px-2 py-0.5 rounded-full text-[9px] font-black tracking-widest shadow-xs">
+                EXPERIENCE FRAME.AI
+                <ArrowRight size={10} className="text-[#FF5547] stroke-[3]" />
+              </span>
+              <span className="text-black/40 font-bold ml-1">•</span>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
       {/* 1. HEADLINE & SUBHEAD (Top Stack - Compact & Impactful with proper spacing from header) */}
-      <div className="text-center pt-3 relative z-10 flex flex-col items-center">
+      <div className="text-center pt-1 xs:pt-2 relative z-10 flex flex-col items-center px-4">
+        
+        {/* Two capabilities as compact floating labels */}
+        <motion.div 
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-center gap-1.5 mb-2.5"
+        >
+          <span className="px-2.5 py-0.5 bg-black text-white rounded-full text-[8px] sm:text-[9px] font-black tracking-wider uppercase border border-white/20 shadow-sm flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5547]" />
+            BUSINESS MARKETING
+          </span>
+          <span className="text-black font-black text-[10px]">+</span>
+          <span className="px-2.5 py-0.5 bg-white text-black rounded-full text-[8px] sm:text-[9px] font-black tracking-wider uppercase border border-black shadow-sm flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-black" />
+            CREATOR CLIPPING
+          </span>
+        </motion.div>
+
+        {/* Modestly enlarged headline for stronger presence without overflowing */}
         <motion.h1 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="text-2xl sm:text-3xl font-display font-black leading-[1.05] uppercase tracking-tight text-black"
+          className="text-[1.75rem] xs:text-[1.95rem] sm:text-3xl font-display font-black leading-[1.02] uppercase tracking-tight text-black"
         >
-          WE BUILD <br />
-          <span className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]">BRANDS PEOPLE</span> <br />
-          CAN'T IGNORE.
+          WE TURN <br />
+          <span className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]">CONTENT</span> <br />
+          INTO ATTENTION.
         </motion.h1>
 
         <motion.p 
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.4 }}
-          className="text-[11px] sm:text-xs font-extrabold text-black/90 mt-2.5 max-w-[290px] leading-snug px-1"
+          className="text-[11.5px] xs:text-xs sm:text-[13px] font-extrabold text-black/90 mt-2.5 max-w-[290px] leading-snug px-1"
         >
-          AI marketing strategy, creative direction, and high-retention content systems that scale your business faster.
+          We help brands and creators turn content into attention and growth.
         </motion.p>
       </div>
 
-      {/* 2. MAIN ILLUSTRATION (Occupies ~38% of height - Visual Hero Centerpiece) */}
-      <div className="relative w-full max-w-[320px] mx-auto aspect-[4/3] flex items-center justify-center my-auto">
+      {/* 2. MAIN ILLUSTRATION (Slightly lower and centered with comfortable breathing space above Dynamic Island) */}
+      <div className="relative w-full max-w-[315px] mx-auto aspect-[4/3] flex items-center justify-center mt-auto mb-4 xs:mb-6">
         
         {/* Floating Sticker 1: 2.6M+ Views (Top-Left) */}
         <motion.div
@@ -75,7 +125,7 @@ export default function MobileHero() {
             SCROLL STOPPER
           </div>
           <div className="bg-[#FF3B2F] text-white px-2 py-0.5 font-display font-black text-[9px] tracking-widest uppercase border border-black shadow-[0_0_12px_rgba(255,59,47,0.5)] transform rotate-2 mt-0.5">
-            CREATIVE AI ⚡
+            CREATIVE AI
           </div>
         </motion.div>
 
@@ -130,35 +180,10 @@ export default function MobileHero() {
           <span className="text-[9px] font-black uppercase tracking-wider">AI CONTENT SYSTEM</span>
         </motion.div>
 
-        {/* Motion Arrow / Doodle pointing down */}
-        <div className="absolute -bottom-3 right-4 z-20 text-black font-black text-xs opacity-70 pointer-events-none animate-bounce">
-          ↓
+        {/* Subtle scroll indicator */}
+        <div className="absolute -bottom-2 right-4 z-20 text-black/60 font-mono font-black text-[10px] tracking-wider pointer-events-none uppercase">
+          SCROLL ↓
         </div>
-      </div>
-
-      {/* 3. PRIMARY CTA BUTTON (ONLY ONE BUTTON ON MOBILE -> AI AUDIT) */}
-      <div className="w-full flex justify-center pb-2 relative z-10">
-        <motion.div
-          whileTap={{ scale: 0.95 }}
-          className="w-full max-w-[280px]"
-        >
-          <a
-            href="#ai-audit"
-            onClick={(e) => {
-              const el = document.getElementById('ai-audit');
-              if (el) {
-                e.preventDefault();
-                const topOffset = el.getBoundingClientRect().top + window.scrollY - 80;
-                window.scrollTo({ top: Math.max(0, topOffset), behavior: 'smooth' });
-              }
-            }}
-            className="w-full py-3.5 px-6 bg-black text-white rounded-full font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[4px_4px_0px_#000] border-2 border-black active:scale-95 transition-transform hover:bg-neutral-900 text-center"
-          >
-            <Sparkles size={16} className="text-[#FF5547] animate-pulse" />
-            <span>ANALYZE MY WEBSITE</span>
-            <ArrowUpRight size={16} className="stroke-[3]" />
-          </a>
-        </motion.div>
       </div>
 
     </div>

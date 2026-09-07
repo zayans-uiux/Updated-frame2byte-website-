@@ -7,7 +7,7 @@ export default function PlansPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pt-20 min-h-screen bg-[#0B0B0B] text-white"
+      className="pt-20 sm:pt-24 min-h-screen bg-[#FF3B2F] text-black"
     >
       <Pricing />
     </motion.div>

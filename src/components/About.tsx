@@ -6,19 +6,19 @@ const testimonials = [
     quote: "Frame2Byte completely transformed our social media presence. Their reels brought us 3x more footfall in the first month!",
     author: "Café De Ollas",
     role: "Restaurant & Lifestyle Brand",
-    avatar: "☕"
+    avatar: "CD"
   },
   {
     quote: "The quality of video editing and storytelling is unmatched. They understand hooks, retention, and viral pacing like pros.",
     author: "Sakaza Schezwan",
     role: "FMCG Brand",
-    avatar: "🌶️"
+    avatar: "SS"
   },
   {
     quote: "Fast turnarounds, incredible graphic design, and a team that genuinely cares about your brand growth. Highly recommended!",
     author: "Oottupura Cafe",
     role: "Culinary & Dining",
-    avatar: "🍲"
+    avatar: "OC"
   }
 ];
 
@@ -26,7 +26,7 @@ export default function About() {
   return (
     <>
       {/* Testimonials Block */}
-      <section className="py-16 sm:py-24 bg-[#FF3B2F] text-black border-b-2 border-black relative overflow-hidden">
+      <section className="py-16 sm:py-24 bg-white md:bg-[#FF3B2F] text-black border-b-2 border-black relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
             <div className="inline-block bg-black text-white px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase mb-4 shadow-md">
@@ -34,7 +34,7 @@ export default function About() {
             </div>
             <h2 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-black tracking-tight uppercase leading-[0.98] text-black break-words">
               OUR CLIENTS <br />
-              <span className="text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">SAY IT BEST.</span>
+              <span className="text-[#FF3B2F] md:text-white md:drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">SAY IT BEST.</span>
             </h2>
           </div>
 
@@ -49,25 +49,25 @@ export default function About() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className={`bg-[#F5F4EF] p-6 sm:p-8 rounded-[2rem] border-2 border-black shadow-[8px_8px_0px_#0B0B0B] flex flex-col justify-between hover:rotate-0 hover:-translate-y-2 hover:shadow-[12px_12px_0px_#0B0B0B] transition-all duration-300 relative ${rotation}`}
+                  className={`bg-[#FF3B2F] md:bg-[#F5F4EF] p-6 sm:p-8 rounded-[2rem] border-2 border-black shadow-[8px_8px_0px_#0B0B0B] flex flex-col justify-between hover:rotate-0 hover:-translate-y-2 hover:shadow-[12px_12px_0px_#0B0B0B] transition-all duration-300 relative ${rotation}`}
                 >
                   {/* Top Stats Tag */}
-                  <div className="absolute -top-3.5 right-6 bg-black text-[#FF5547] px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase border border-white/20 shadow-[0_0_10px_rgba(255,59,47,0.4)]">
-                    ⚡ {statsBadge}
+                  <div className="absolute -top-3.5 right-6 bg-black text-white md:text-[#FF5547] px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase border border-white/20 shadow-[0_0_10px_rgba(255,59,47,0.4)]">
+                    {statsBadge}
                   </div>
 
                   <div>
-                    <div className="flex items-center gap-1 text-[#FF3B2F] mb-4">
+                    <div className="flex items-center gap-1 text-black md:text-[#FF3B2F] mb-4">
                       {[...Array(5)].map((_, s) => (
-                        <Star key={s} size={15} className="fill-[#FF3B2F]" />
+                        <Star key={s} size={15} className="fill-black text-black md:fill-[#FF3B2F] md:text-[#FF3B2F]" />
                       ))}
                     </div>
-                    <p className="text-xs sm:text-sm font-extrabold text-black/90 leading-relaxed mb-6 italic">
+                    <p className="text-xs sm:text-sm font-extrabold text-black leading-relaxed mb-6 italic">
                       "{item.quote}"
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 pt-4 border-t-2 border-black/10">
+                  <div className="flex items-center gap-3 pt-4 border-t-2 border-black/20 md:border-black/10">
                     <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg shadow-sm border border-black">
                       {item.avatar}
                     </div>
@@ -75,7 +75,7 @@ export default function About() {
                       <h4 className="font-display font-black text-sm uppercase text-black">
                         {item.author}
                       </h4>
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-black/60">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-black/80 md:text-black/60">
                         {item.role}
                       </p>
                     </div>

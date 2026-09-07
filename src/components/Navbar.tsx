@@ -5,11 +5,11 @@ import { Link, useLocation } from 'react-router-dom';
 
 const navLinks = [
   { name: 'HOME', href: '/' },
-  { name: 'ABOUT', href: '/#about' },
-  { name: 'OUR WORK', href: '/portfolio' },
+  { name: 'WORK', href: '/works' },
   { name: 'SERVICES', href: '/services' },
+  { name: 'CLIPPING', href: '/clipping' },
   { name: 'PLANS', href: '/plans' },
-  { name: 'FRAME.AI', href: '/#ai-audit' },
+  { name: 'FRAMEAI', href: '/frameai' },
 ];
 
 export default function Navbar() {
@@ -65,9 +65,10 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-5 lg:gap-7">
+          <div className="hidden md:flex items-center gap-2 md:gap-2.5 lg:gap-3.5 xl:gap-4">
             {navLinks.map((link, i) => {
-              const isFrameAi = link.name === 'FRAME.AI';
+              const isFrameAi = link.name === 'FRAMEAI';
+              const isActive = location.pathname === link.href;
               return (
                 <motion.div
                   key={link.name}
@@ -77,15 +78,15 @@ export default function Navbar() {
                 >
                   <Link
                     to={link.href}
-                    className={`text-xs font-black tracking-widest transition-all uppercase flex items-center gap-1.5 ${
+                    className={`text-[10px] md:text-[10.5px] lg:text-[11px] font-black tracking-wider transition-all uppercase flex items-center gap-1 ${
                       isFrameAi
-                        ? 'bg-[#FF3B2F]/20 text-[#FF5547] border border-[#FF3B2F]/60 px-3 py-1 rounded-full hover:bg-[#FF3B2F] hover:text-white shadow-[0_0_12px_rgba(255,59,47,0.5)] hover:shadow-[0_0_20px_rgba(255,59,47,0.8)] hover:scale-105'
-                        : location.pathname === link.href 
+                        ? 'bg-[#FF3B2F]/20 text-[#FF5547] border border-[#FF3B2F]/60 px-2 py-0.5 rounded-full hover:bg-[#FF3B2F] hover:text-white shadow-[0_0_10px_rgba(255,59,47,0.4)] hover:shadow-[0_0_18px_rgba(255,59,47,0.7)] hover:scale-105'
+                        : isActive 
                         ? 'text-[#FF3B2F]'
                         : 'text-white/90 hover:text-[#FF3B2F]'
                     }`}
                   >
-                    {isFrameAi && <Sparkles size={13} className="text-[#FF5547] animate-pulse drop-shadow-[0_0_8px_rgba(255,59,47,0.9)]" />}
+                    {isFrameAi && <Sparkles size={11} className="text-[#FF5547] animate-pulse drop-shadow-[0_0_8px_rgba(255,59,47,0.9)]" />}
                     <span>{link.name}</span>
                   </Link>
                 </motion.div>
@@ -96,13 +97,13 @@ export default function Navbar() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <a
-                href="#contact"
-                className="px-5 py-2.5 rounded-lg text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-all duration-300 bg-[#FF3B2F] text-white hover:bg-[#E02D21] hover:scale-105 shadow-[3px_3px_0px_#FFF]"
+              <Link
+                to="/contact"
+                className="px-3 lg:px-3.5 py-1.5 rounded-lg text-[10px] md:text-[10.5px] lg:text-[11px] font-black uppercase tracking-wider flex items-center gap-1 transition-all duration-300 bg-[#FF3B2F] text-white hover:bg-[#E02D21] hover:scale-105 shadow-[2px_2px_0px_#FFF]"
               >
-                <span>LET'S TALK</span>
-                <ArrowUpRight size={14} className="stroke-[3]" />
-              </a>
+                <span>LETS TALK</span>
+                <ArrowUpRight size={12} className="stroke-[3]" />
+              </Link>
             </motion.div>
           </div>
 
@@ -150,12 +151,12 @@ export default function Navbar() {
 
               {[
                 { name: 'HOME', href: '/' },
-                { name: 'ABOUT', href: '/#about' },
-                { name: 'OUR WORK', href: '/portfolio' },
+                { name: 'WORK', href: '/works' },
                 { name: 'SERVICES', href: '/services' },
+                { name: 'CLIPPING', href: '/clipping' },
                 { name: 'PLANS', href: '/plans' },
-                { name: 'FRAME.AI (AUDIT)', href: '/#ai-audit' },
-                { name: 'CONTACT', href: '/#contact' },
+                { name: 'FRAMEAI', href: '/frameai' },
+                { name: 'LETS TALK', href: '/contact' },
               ].map((link, idx) => (
                 <motion.div
                   key={link.name}
